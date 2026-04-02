@@ -2,6 +2,7 @@ import type Database from 'better-sqlite3';
 import { randomUUID } from 'crypto';
 import { buildProvinceGrid, coordToId } from '@pax-imperia/shared';
 import type { FactionPersonality } from '@pax-imperia/shared';
+import { seedCommanders } from '../engine/commanderEngine.js';
 
 // Starting faction definitions — 1 player + 6 AI
 interface FactionDef {
@@ -128,6 +129,9 @@ export function seedGame(db: Database.Database, gameId: string, playerFactionId:
       }
     }
   })();
+
+  // Seed starting commanders (one per faction) — outside transaction (uses its own writes)
+  seedCommanders(db, gameId);
 }
 
 export { FACTION_DEFS };
