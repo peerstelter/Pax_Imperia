@@ -3,21 +3,39 @@ import { randomUUID } from 'crypto';
 import { getDb } from '../db/database.js';
 import { seedGame, FACTION_DEFS } from '../db/seeder.js';
 import { advanceTurn } from '../engine/turnEngine.js';
+import { loadGameState, exportGameJson } from '../engine/saveLoad.js';
 
 const router = Router();
 
+// GET /api/game — list all saves
+router.get('/', (_req: Request, res: Response) => {
+  const db = getDb();
+  const saves = db.prepare('SELECT id, player_faction, turn, winner, created_at, updated_at FROM games ORDER BY updated_at DESC').all();
+  return res.json(saves);
+});
+
 // GET /api/game/:id — load full game state
 router.get('/:id', (req: Request, res: Response) => {
+  if (req.params.id === 'factions') return res.status(400).json({ error: 'Use /api/game/factions' });
   const db = getDb();
-  const game = db.prepare('SELECT * FROM games WHERE id = ?').get(req.params.id);
-  if (!game) return res.status(404).json({ error: 'Game not found' });
+  try {
+    return res.json(loadGameState(db, req.params.id));
+  } catch {
+    return res.status(404).json({ error: 'Game not found' });
+  }
+});
 
-  const factions = db.prepare('SELECT * FROM factions WHERE game_id = ?').all(req.params.id);
-  const provinces = db.prepare('SELECT * FROM provinces WHERE game_id = ?').all(req.params.id);
-  const armies = db.prepare('SELECT * FROM armies WHERE game_id = ?').all(req.params.id);
-  const relations = db.prepare('SELECT * FROM diplomatic_relations WHERE game_id = ?').all(req.params.id);
-
-  return res.json({ game, factions, provinces, armies, relations });
+// GET /api/game/:id/export — download game as JSON
+router.get('/:id/export', (req: Request, res: Response) => {
+  const db = getDb();
+  try {
+    const json = exportGameJson(db, req.params.id);
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="pax-imperia-${req.params.id}.json"`);
+    return res.send(json);
+  } catch {
+    return res.status(404).json({ error: 'Game not found' });
+  }
 });
 
 // GET /api/game/factions — list available starting factions

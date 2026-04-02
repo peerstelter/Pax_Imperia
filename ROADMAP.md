@@ -30,7 +30,7 @@ A strategy game in which the objective is to expand your empire through three pa
 - [x] **Task 10** — Turn engine: turn start, resource ticks, event queue, end-of-turn handler
 - [x] **Task 11** — Fog of War: provinces outside own range hidden, revealed by troops/spies
 - [x] **Task 12** — Minimap component for overview
-- [ ] **Task 13** — Save/load system: game state in SQLite, JSON export
+- [x] **Task 13** — Save/load system: game state in SQLite, JSON export
 - [ ] **Task 14** — Docker setup: `docker-compose.yml` with client build, API container, Nginx proxy
 
 ---
@@ -180,7 +180,7 @@ You secretly control most kingdoms through puppets (75%+ shadow influence trigge
 
 | Phase | Focus | Tasks | Status |
 |---|---|---|---|
-| 1 | Foundation, map, infrastructure | 1–14 | 🔄 In progress (12/14 done) |
+| 1 | Foundation, map, infrastructure | 1–14 | 🔄 In progress (13/14 done) |
 | 2 | War system complete | 15–30 | ⬜ Not started |
 | 3 | Diplomacy complete | 31–43 | ⬜ Not started |
 | 4 | Intrigue complete | 44–57 | ⬜ Not started |
