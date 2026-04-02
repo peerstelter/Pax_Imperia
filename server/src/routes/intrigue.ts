@@ -36,6 +36,52 @@ router.post('/action', (req: Request, res: Response) => {
   return res.status(201).json(result);
 });
 
+// GET /api/intrigue/espionage/:gameId/:spyingFactionId/:targetFactionId
+// Returns intelligence on target faction: troops, resources, active intrigue ops.
+// Only available if the spying faction has at least one province of the target revealed.
+router.get('/espionage/:gameId/:spyingFactionId/:targetFactionId', (req: Request, res: Response) => {
+  const { gameId, spyingFactionId, targetFactionId } = req.params;
+  const db = getDb();
+
+  // Gate: target faction must have at least one revealed province
+  const revealed = db
+    .prepare('SELECT COUNT(*) as c FROM provinces WHERE game_id = ? AND owner_id = ? AND is_revealed = 1')
+    .get(gameId, targetFactionId) as { c: number };
+  if (revealed.c === 0)
+    return res.status(403).json({ error: 'No intelligence on this faction — run a spy action first' });
+
+  // Resources
+  const faction = db
+    .prepare('SELECT gold, food, manpower FROM factions WHERE game_id = ? AND id = ?')
+    .get(gameId, targetFactionId) as { gold: number; food: number; manpower: number } | undefined;
+
+  // Troop strength (sum of all units across all armies)
+  const troops = db
+    .prepare(
+      `SELECT u.type, SUM(u.count) as total
+       FROM units u JOIN armies a ON u.army_id = a.id AND u.game_id = a.game_id
+       WHERE a.game_id = ? AND a.faction_id = ?
+       GROUP BY u.type`,
+    )
+    .all(gameId, targetFactionId) as { type: string; total: number }[];
+
+  // Active intrigue actions targeting the spying faction (counter-intel)
+  const intrigueOps = db
+    .prepare(
+      `SELECT type, target_province_id, success_chance, status
+       FROM intrigue_actions
+       WHERE game_id = ? AND source_faction_id = ? AND status = 'pending'`,
+    )
+    .all(gameId, targetFactionId) as { type: string; target_province_id: string | null; success_chance: number; status: string }[];
+
+  return res.json({
+    targetFactionId,
+    resources: faction ?? null,
+    troopStrength: troops,
+    activeIntrigueOps: intrigueOps,
+  });
+});
+
 // POST /api/intrigue/network/build — place an agent in a province
 router.post('/network/build', (req: Request, res: Response) => {
   const { gameId, factionId, provinceId } = req.body as {
