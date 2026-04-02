@@ -99,7 +99,7 @@ Enough kingdoms vote to restore the empire under your rule (voting mechanic).
 
 ### Tasks
 
-- [ ] **Task 31** — Opinion system: numeric value −100 to +100 per faction pair, decay over time
+- [x] **Task 31** — Opinion system: numeric value −100 to +100 per faction pair, decay over time
 - [ ] **Task 32** — Diplomacy menu: overview of all factions with opinion, alliances, active treaties
 - [ ] **Task 33** — Alliances: defensive vs. offensive alliance, automatic war entry, dissolution with opinion penalty
 - [ ] **Task 34** — Marriage treaties: dynastic union, strong opinion boost, unlocks inheritance claims
@@ -182,7 +182,7 @@ You secretly control most kingdoms through puppets (75%+ shadow influence trigge
 |---|---|---|---|
 | 1 | Foundation, map, infrastructure | 1–14 | ✅ Complete |
 | 2 | War system complete | 15–30 | ✅ Complete |
-| 3 | Diplomacy complete | 31–43 | ⬜ Not started |
+| 3 | Diplomacy complete | 31–43 | 🔄 In progress (1/13 done) |
 | 4 | Intrigue complete | 44–57 | ⬜ Not started |
 | 5 | AI, UI, victory, polish | 58–72 | ⬜ Not started |
 
