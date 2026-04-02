@@ -3,6 +3,7 @@ import type { Province, Faction } from '@pax-imperia/shared';
 import { buildProvinceGrid, coordToId, MAP_COLS, MAP_ROWS } from '@pax-imperia/shared';
 import ProvinceMap from './components/map/ProvinceMap.js';
 import ProvinceInfoPanel from './components/map/ProvinceInfoPanel.js';
+import Minimap from './components/map/Minimap.js';
 
 // Placeholder factions for local dev before API is connected (Task 13 / Task 64)
 const DEV_FACTIONS: Faction[] = [
@@ -58,7 +59,7 @@ export default function App() {
       </header>
 
       {/* Main content */}
-      <main className="flex flex-1 gap-4 p-4 overflow-hidden">
+      <main className="flex flex-1 gap-4 p-4 overflow-hidden relative">
         <ProvinceMap
           provinces={provinces}
           factions={DEV_FACTIONS}
@@ -66,6 +67,16 @@ export default function App() {
           onSelectProvince={setSelectedId}
           cellSize={90}
         />
+
+        {/* Minimap — bottom-left overlay */}
+        <div className="absolute bottom-6 left-6 z-10">
+          <Minimap
+            provinces={provinces}
+            factions={DEV_FACTIONS}
+            selectedProvinceId={selectedId}
+            onSelectProvince={setSelectedId}
+          />
+        </div>
 
         {selectedProvince && selectedFaction !== undefined ? (
           <ProvinceInfoPanel
