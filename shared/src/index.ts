@@ -5,3 +5,4 @@ export * from './map.js';
 export * from './troops.js';
 export * from './formation.js';
 export * from './siege.js';
+export * from './terrain.js';

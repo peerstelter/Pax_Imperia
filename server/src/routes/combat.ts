@@ -45,10 +45,12 @@ router.post('/declare', (req: Request, res: Response) => {
 
 // POST /api/combat/resolve — resolve a field battle between two armies
 router.post('/resolve', (req: Request, res: Response) => {
-  const { gameId, attackerArmyId, defenderArmyId } = req.body as {
+  const { gameId, attackerArmyId, defenderArmyId, terrain, ambush } = req.body as {
     gameId: string;
     attackerArmyId: string;
     defenderArmyId: string;
+    terrain?: import('@pax-imperia/shared').TerrainType;
+    ambush?: boolean;
   };
   if (!gameId || !attackerArmyId || !defenderArmyId) {
     return res.status(400).json({ error: 'gameId, attackerArmyId, defenderArmyId required' });
@@ -96,6 +98,7 @@ router.post('/resolve', (req: Request, res: Response) => {
     { id: defRow.id, factionId: defRow.faction_id, provinceId: defRow.province_id, units: defUnits, formation: defFormation },
     loadCommander(atkRow.commander_id),
     loadCommander(defRow.commander_id),
+    { terrain, ambush },
   );
 
   // Persist survivor counts back to units table

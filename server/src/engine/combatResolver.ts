@@ -1,7 +1,7 @@
 import type { Unit, Formation, Army, Commander } from '@pax-imperia/shared';
-import { COUNTER_MATRIX, COUNTER_BONUS, FORMATION_MODIFIERS, flattenFormation } from '@pax-imperia/shared';
+import { COUNTER_MATRIX, COUNTER_BONUS, FORMATION_MODIFIERS, flattenFormation, TERRAIN_MODIFIERS } from '@pax-imperia/shared';
 import { moraleFactor } from './unitFactory.js';
-import type { FormationSlot } from '@pax-imperia/shared';
+import type { FormationSlot, TerrainType } from '@pax-imperia/shared';
 
 export interface CombatRound {
   round: number;
@@ -25,6 +25,11 @@ const RANDOM_VARIANCE = 0.1;  // ±10%
 const MAX_ROUNDS      = 10;
 const ROUT_MORALE     = 20;   // units below this morale flee
 
+export interface FieldBattleOptions {
+  terrain?: TerrainType;
+  ambush?: boolean;  // attacker is ambushed — swap terrain mods for first 2 rounds
+}
+
 /**
  * Resolve a field battle between two armies.
  * Called server-side only; client never runs this.
@@ -34,7 +39,11 @@ export function resolveCombat(
   defender: Army,
   attackerCommander?: Commander,
   defenderCommander?: Commander,
+  options?: FieldBattleOptions,
 ): CombatResult {
+  const terrain = options?.terrain ?? 'open';
+  const terrainMods = TERRAIN_MODIFIERS[terrain];
+  const ambush = options?.ambush ?? false;
   // Deep-copy units so we mutate state here without touching originals
   let atkFormation = deepCopyFormation(attacker.formation);
   let defFormation = deepCopyFormation(defender.formation);
@@ -42,9 +51,21 @@ export function resolveCombat(
   const rounds: CombatRound[] = [];
   let round = 0;
 
+  // In an ambush, first 2 rounds the attacker is penalised
+  if (ambush) {
+    applyMoraleDrop(atkFormation, 15);
+  }
+
   while (round < MAX_ROUNDS) {
     round++;
     const roundLog: string[] = [];
+
+    // Terrain modifiers: ambush reverses attacker/defender bonus for first 2 rounds
+    const atkTerrainMod = ambush && round <= 2 ? terrainMods.defenderMod : terrainMods.attackerMod;
+    const defTerrainMod = ambush && round <= 2 ? terrainMods.attackerMod : terrainMods.defenderMod;
+
+    if (ambush && round === 1) roundLog.push(`Ambush! Attacker penalised for rounds 1–2`);
+    if (terrain !== 'open') roundLog.push(`Terrain: ${terrain} (atk ×${atkTerrainMod.toFixed(2)}, def ×${defTerrainMod.toFixed(2)})`);
 
     const atkUnits = flattenFormation(atkFormation);
     const defUnits = flattenFormation(defFormation);
@@ -67,10 +88,12 @@ export function resolveCombat(
       const { casualties, events } = resolveSlot(
         attackingUnits,
         targetUnits,
-        FORMATION_MODIFIERS[slot].attackMod,
-        FORMATION_MODIFIERS[targetSlot].defenseMod,
+        FORMATION_MODIFIERS[slot].attackMod * atkTerrainMod,
+        FORMATION_MODIFIERS[targetSlot].defenseMod * defTerrainMod,
         attackerCommander,
         round,
+        terrain,
+        terrainMods.cavalryPenalty,
       );
       totalDefCasualties += casualties;
       roundLog.push(...events);
@@ -90,10 +113,12 @@ export function resolveCombat(
       const { casualties } = resolveSlot(
         attackingUnits,
         targetUnits,
-        FORMATION_MODIFIERS[slot].attackMod,
-        FORMATION_MODIFIERS[targetSlot].defenseMod,
+        FORMATION_MODIFIERS[slot].attackMod * defTerrainMod,
+        FORMATION_MODIFIERS[targetSlot].defenseMod * atkTerrainMod,
         defenderCommander,
         round,
+        terrain,
+        terrainMods.cavalryPenalty,
       );
       totalAtkCasualties += casualties;
       applyLosses(atkFormation[targetSlot], casualties);
@@ -148,6 +173,8 @@ function resolveSlot(
   defenseMod: number,
   commander: Commander | undefined,
   _round: number,
+  _terrain: TerrainType = 'open',
+  cavalryPenalty: number = 1.0,
 ): { casualties: number; events: string[] } {
   const events: string[] = [];
   let totalCasualties = 0;
@@ -156,9 +183,10 @@ function resolveSlot(
     for (const def of defenders) {
       if (def.count <= 0) continue;
 
-      const counterBonus = COUNTER_MATRIX[atk.type].beats === def.type ? COUNTER_BONUS : 0;
-      const variance     = 1 + (Math.random() * 2 - 1) * RANDOM_VARIANCE;
-      const cmdBonus     = commander ? commander.attack * 0.01 : 0;  // 1% per commander attack stat
+      const counterBonus  = COUNTER_MATRIX[atk.type].beats === def.type ? COUNTER_BONUS : 0;
+      const variance      = 1 + (Math.random() * 2 - 1) * RANDOM_VARIANCE;
+      const cmdBonus      = commander ? commander.attack * 0.01 : 0;
+      const cavPenalty    = atk.type === 'cavalry' ? cavalryPenalty : 1.0;
 
       const rawDamage =
         atk.attack
@@ -166,7 +194,8 @@ function resolveSlot(
         * attackMod
         * moraleFactor(atk.morale)
         * (1 + cmdBonus)
-        * variance;
+        * variance
+        * cavPenalty;
 
       const netDamage = rawDamage / (def.defense * defenseMod);
       // casualties = damage × 5 troops per damage point (tuning knob)
