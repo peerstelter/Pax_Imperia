@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { randomUUID } from 'crypto';
 import { getDb } from '../db/database.js';
 import { seedGame, FACTION_DEFS } from '../db/seeder.js';
+import { advanceTurn } from '../engine/turnEngine.js';
 
 const router = Router();
 
@@ -46,6 +47,17 @@ router.post('/', (req: Request, res: Response) => {
   }
 
   return res.status(201).json({ id });
+});
+
+// PUT /api/game/:id/turn — advance to next turn
+router.put('/:id/turn', (req: Request, res: Response) => {
+  const db = getDb();
+  try {
+    const result = advanceTurn(db, req.params.id);
+    return res.json(result);
+  } catch (err) {
+    return res.status(400).json({ error: (err as Error).message });
+  }
 });
 
 // DELETE /api/game/:id — delete a save
