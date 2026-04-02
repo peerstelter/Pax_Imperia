@@ -8,7 +8,7 @@ A turn-based browser strategy game in which you rebuild a fractured empire acros
 
 ## 🗺️ Overview
 
-Pax Imperia is a medieval grand strategy game playable entirely in the browser as a Progressive Web App. You lead one faction among seven, each with its own personality, starting position, and ambitions. The game ends when one player achieves a **Victory Condition** — and there are three very different ways to get there.
+Pax Imperia is a medieval grand strategy game playable entirely in the browser as a Progressive Web App. You lead one faction among five, each with its own personality, starting position, and ambitions. The game ends when one player achieves a **Victory Condition** — and there are three very different ways to get there.
 
 | Victory Path | Condition |
 |---|---|
