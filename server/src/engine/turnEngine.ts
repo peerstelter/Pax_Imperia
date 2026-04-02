@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto';
 import { tickFactionResources } from './factionEngine.js';
 import { updateFogOfWar } from './fogOfWar.js';
 import { tickLogistics } from './logistics.js';
+import { applyWarExhaustion } from './warExhaustion.js';
 import { INTRIGUE_PUPPET_THRESHOLD } from '@pax-imperia/shared';
 
 interface GameRow { id: string; turn: number; player_faction: string; winner: string | null }
@@ -46,7 +47,10 @@ export function advanceTurn(db: Database.Database, gameId: string): {
     // 2. Logistics (attrition, supply cost) — before resource tick so shortfalls show
     tickLogistics(db, gameId, game.turn);
 
-    // 3. Resource tick
+    // 3. War exhaustion effects (morale drain, gold penalty)
+    applyWarExhaustion(db, gameId);
+
+    // 4. Resource tick
     tickFactionResources(db, gameId);
 
     // 3. Increment turn
