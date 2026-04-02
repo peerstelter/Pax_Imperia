@@ -6,6 +6,7 @@ import { tickLogistics } from './logistics.js';
 import { applyWarExhaustion } from './warExhaustion.js';
 import { tickOpinionDecay, tickTreatyOpinionBonuses } from './opinionEngine.js';
 import { tradeGoldTick, vassalTributeTick } from './diplomacyEngine.js';
+import { checkDiplomaticVictory } from './electionEngine.js';
 import { INTRIGUE_PUPPET_THRESHOLD } from '@pax-imperia/shared';
 
 interface GameRow { id: string; turn: number; player_faction: string; winner: string | null }
@@ -216,21 +217,10 @@ function checkVictory(db: Database.Database, gameId: string): VictoryResult | nu
     return { factionId: shadowRows[0].source_faction, path: 'intrigue' };
   }
 
-  // Diplomacy victory — 3+ alliances (simple check; full voting mechanic in Task 41)
-  const diplomacyRows = db
-    .prepare(
-      `SELECT faction_a as fid FROM diplomatic_relations
-       WHERE game_id = ? AND treaties LIKE '%alliance%'
-       GROUP BY faction_a HAVING COUNT(*) >= 3
-       UNION
-       SELECT faction_b as fid FROM diplomatic_relations
-       WHERE game_id = ? AND treaties LIKE '%alliance%'
-       GROUP BY faction_b HAVING COUNT(*) >= 3`,
-    )
-    .all(gameId, gameId) as { fid: string }[];
-
-  if (diplomacyRows.length > 0) {
-    return { factionId: diplomacyRows[0].fid, path: 'diplomacy' };
+  // Diplomacy victory — Imperial Election (faction needs votes from 3+ factions with opinion ≥ 50)
+  const electionWinner = checkDiplomaticVictory(db, gameId);
+  if (electionWinner) {
+    return { factionId: electionWinner, path: 'diplomacy' };
   }
 
   return null;

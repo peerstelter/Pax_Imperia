@@ -6,6 +6,7 @@ import {
   vassalize, proposeNap,
   sendDiplomaticMission, sendGift,
 } from '../engine/diplomacyEngine.js';
+import { conductElection } from '../engine/electionEngine.js';
 import { adjustOpinion } from '../engine/opinionEngine.js';
 
 const router = Router();
@@ -89,6 +90,17 @@ router.post('/gift', (req: Request, res: Response) => {
   const db = getDb();
   const result = sendGift(db, gameId, fromId, toId, Number(goldAmount));
   return result.ok ? res.status(200).json(result) : res.status(400).json(result);
+});
+
+// POST /api/diplomacy/election — trigger Imperial Election for a candidate
+router.post('/election', (req: Request, res: Response) => {
+  const { gameId, candidateId } = req.body as { gameId: string; candidateId: string };
+  if (!gameId || !candidateId)
+    return res.status(400).json({ error: 'gameId, candidateId required' });
+
+  const db = getDb();
+  const result = conductElection(db, gameId, candidateId);
+  return res.status(200).json(result);
 });
 
 export default router;
