@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { randomUUID } from 'crypto';
 import { getDb } from '../db/database.js';
 import type { IntrigueActionType } from '@pax-imperia/shared';
+import { buildSpyNetwork, getNetworkStrength, listNetworks } from '../engine/spyNetwork.js';
 
 const router = Router();
 
@@ -49,6 +50,31 @@ router.post('/action', (req: Request, res: Response) => {
   ).run(id, gameId, type, sourceFactionId, targetFactionId, targetProvinceId ?? null, baseChance[type], game.turn);
 
   return res.status(201).json({ id });
+});
+
+// POST /api/intrigue/network/build — place an agent in a province
+router.post('/network/build', (req: Request, res: Response) => {
+  const { gameId, factionId, provinceId } = req.body as {
+    gameId: string; factionId: string; provinceId: string;
+  };
+  if (!gameId || !factionId || !provinceId)
+    return res.status(400).json({ error: 'gameId, factionId, provinceId required' });
+
+  const db = getDb();
+  const result = buildSpyNetwork(db, gameId, factionId, provinceId);
+  return result.ok ? res.status(201).json(result) : res.status(400).json(result);
+});
+
+// GET /api/intrigue/network/:gameId/:factionId — list all networks for a faction
+router.get('/network/:gameId/:factionId', (req: Request, res: Response) => {
+  const db = getDb();
+  return res.json(listNetworks(db, req.params.gameId, req.params.factionId));
+});
+
+// GET /api/intrigue/network/:gameId/:factionId/:provinceId — get a specific network
+router.get('/network/:gameId/:factionId/:provinceId', (req: Request, res: Response) => {
+  const db = getDb();
+  return res.json(getNetworkStrength(db, req.params.gameId, req.params.factionId, req.params.provinceId));
 });
 
 export default router;

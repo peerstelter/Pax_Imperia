@@ -139,6 +139,20 @@ CREATE TABLE IF NOT EXISTS shadow_influence (
   PRIMARY KEY (game_id, source_faction, target_faction)
 );
 
+-- ── Spy networks ──────────────────────────────────────────────────────────
+-- One row per (game, faction, province) representing an established network.
+-- strength 0-100; agents 0-3 (slots). Networks decay 2 pts/turn if not maintained.
+
+CREATE TABLE IF NOT EXISTS spy_networks (
+  game_id     TEXT NOT NULL REFERENCES games(id) ON DELETE CASCADE,
+  faction_id  TEXT NOT NULL,
+  province_id TEXT NOT NULL,
+  agents      INTEGER NOT NULL DEFAULT 0,     -- 0–3 agent slots filled
+  strength    INTEGER NOT NULL DEFAULT 0,     -- 0–100
+  turn_built  INTEGER NOT NULL DEFAULT 1,     -- turn the network was started
+  PRIMARY KEY (game_id, faction_id, province_id)
+);
+
 -- ── Indexes ────────────────────────────────────────────────────────────────
 
 CREATE INDEX IF NOT EXISTS idx_provinces_game ON provinces(game_id);
@@ -146,3 +160,4 @@ CREATE INDEX IF NOT EXISTS idx_armies_game ON armies(game_id);
 CREATE INDEX IF NOT EXISTS idx_units_army ON units(army_id, game_id);
 CREATE INDEX IF NOT EXISTS idx_turn_log_game_turn ON turn_log(game_id, turn);
 CREATE INDEX IF NOT EXISTS idx_intrigue_game ON intrigue_actions(game_id);
+CREATE INDEX IF NOT EXISTS idx_spy_networks_game ON spy_networks(game_id);

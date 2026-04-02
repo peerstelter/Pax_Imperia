@@ -8,6 +8,7 @@ import { tickOpinionDecay, tickTreatyOpinionBonuses } from './opinionEngine.js';
 import { tradeGoldTick, vassalTributeTick } from './diplomacyEngine.js';
 import { checkDiplomaticVictory } from './electionEngine.js';
 import { runAiDecisions } from './aiDecisionEngine.js';
+import { tickNetworkDecay } from './spyNetwork.js';
 import { INTRIGUE_PUPPET_THRESHOLD } from '@pax-imperia/shared';
 
 interface GameRow { id: string; turn: number; player_faction: string; winner: string | null }
@@ -65,7 +66,10 @@ export function advanceTurn(db: Database.Database, gameId: string): {
     tradeGoldTick(db, gameId);
     vassalTributeTick(db, gameId);
 
-    // 4b. Resource tick
+    // 4b. Spy network decay
+    tickNetworkDecay(db, gameId);
+
+    // 4c. Resource tick
     tickFactionResources(db, gameId);
 
     // 3. Increment turn
