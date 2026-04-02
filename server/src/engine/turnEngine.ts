@@ -1,6 +1,7 @@
 import type Database from 'better-sqlite3';
 import { randomUUID } from 'crypto';
 import { tickFactionResources } from './factionEngine.js';
+import { updateFogOfWar } from './fogOfWar.js';
 import { INTRIGUE_PUPPET_THRESHOLD } from '@pax-imperia/shared';
 
 interface GameRow { id: string; turn: number; player_faction: string; winner: string | null }
@@ -47,7 +48,10 @@ export function advanceTurn(db: Database.Database, gameId: string): {
     // 3. Increment turn
     db.prepare('UPDATE games SET turn = turn + 1, updated_at = datetime(\'now\') WHERE id = ?').run(gameId);
 
-    // 4. Log turn end
+    // 4. Update fog of war for the player faction
+    updateFogOfWar(db, gameId, game.player_faction);
+
+    // 5. Log turn end
     db.prepare(
       `INSERT INTO turn_log (id, game_id, turn, type, description, data)
        VALUES (?, ?, ?, 'turn_end', ?, '{}')`,
