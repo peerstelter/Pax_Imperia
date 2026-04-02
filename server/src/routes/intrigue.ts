@@ -6,6 +6,22 @@ import { queueIntrigueAction } from '../engine/intrigueEngine.js';
 
 const router = Router();
 
+// GET /api/intrigue/shadow/:gameId/:sourceFactionId — shadow influence for a faction
+router.get('/shadow/:gameId/:sourceFactionId', (req: Request, res: Response) => {
+  const db = getDb();
+  const rows = db
+    .prepare('SELECT target_faction, influence FROM shadow_influence WHERE game_id = ? AND source_faction = ? ORDER BY influence DESC')
+    .all(req.params.gameId, req.params.sourceFactionId) as { target_faction: string; influence: number }[];
+
+  const PUPPET_THRESHOLD = 75;
+  const result = rows.map((r) => ({
+    targetFactionId: r.target_faction,
+    influence: r.influence,
+    isPuppet: r.influence >= PUPPET_THRESHOLD,
+  }));
+  return res.json(result);
+});
+
 // GET /api/intrigue/:gameId — all intrigue actions for a game
 router.get('/:gameId', (req: Request, res: Response) => {
   const db = getDb();

@@ -1,5 +1,6 @@
 import type Database from 'better-sqlite3';
 import type { FactionPersonality } from '@pax-imperia/shared';
+import { INTRIGUE_PUPPET_THRESHOLD } from '@pax-imperia/shared';
 import { proposeAlliance, proposeTrade, proposeMarriage, proposeNap } from './diplomacyEngine.js';
 import { declareWar } from './warDiplomacy.js';
 
@@ -51,6 +52,27 @@ export function runAiDecisions(db: Database.Database, gameId: string): void {
   }
 }
 
+// ── Puppet check ─────────────────────────────────────────────────────────────
+
+/**
+ * Returns the ID of the faction that controls this faction as a puppet,
+ * or null if not puppeted.
+ */
+export function getPuppetMaster(
+  db: Database.Database,
+  gameId: string,
+  factionId: string,
+): string | null {
+  const row = db
+    .prepare(
+      `SELECT source_faction FROM shadow_influence
+       WHERE game_id = ? AND target_faction = ? AND influence >= ?
+       LIMIT 1`,
+    )
+    .get(gameId, factionId, INTRIGUE_PUPPET_THRESHOLD) as { source_faction: string } | undefined;
+  return row?.source_faction ?? null;
+}
+
 // ── Per-faction AI ────────────────────────────────────────────────────────────
 
 function runFactionAI(
@@ -61,6 +83,13 @@ function runFactionAI(
   relations: RelationRow[],
   strengthMap: Map<string, number>,
 ): void {
+  // Puppeted factions follow their master's alliances instead of acting independently
+  const puppetMaster = getPuppetMaster(db, gameId, self.id);
+  if (puppetMaster) {
+    runPuppetAI(db, gameId, self.id, puppetMaster, relations);
+    return;
+  }
+
   const myStrength = strengthMap.get(self.id) ?? 1;
 
   for (const other of allFactions) {
@@ -120,6 +149,38 @@ function runFactionAI(
           proposeAlliance(db, gameId, self.id, other.id);
         }
         break;
+    }
+  }
+}
+
+// ── Puppet AI ─────────────────────────────────────────────────────────────────
+
+/**
+ * A puppeted faction mirrors its master's alliances: if the master is allied
+ * with someone, the puppet will also attempt to ally with them (if opinion allows).
+ */
+function runPuppetAI(
+  db: Database.Database,
+  gameId: string,
+  puppetId: string,
+  masterId: string,
+  relations: RelationRow[],
+): void {
+  // Find factions allied with the master
+  const masterAllies = relations
+    .filter((r) => {
+      const treaties = JSON.parse(r.treaties) as string[];
+      return (r.faction_a === masterId || r.faction_b === masterId) && treaties.includes('alliance');
+    })
+    .map((r) => (r.faction_a === masterId ? r.faction_b : r.faction_a));
+
+  for (const allyId of masterAllies) {
+    if (allyId === puppetId) continue;
+    const rel = getRelation(relations, puppetId, allyId);
+    const opinion = rel?.opinion ?? 0;
+    const treaties = rel ? (JSON.parse(rel.treaties) as string[]) : [];
+    if (!treaties.includes('alliance') && opinion >= 30) {
+      proposeAlliance(db, gameId, puppetId, allyId);
     }
   }
 }
