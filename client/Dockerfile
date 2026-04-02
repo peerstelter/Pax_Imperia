@@ -7,6 +7,9 @@ COPY client/package.json ./client/
 COPY server/package.json ./server/
 COPY shared/package.json ./shared/
 
+# Build tools required by better-sqlite3 (installed via --workspaces)
+RUN apk add --no-cache python3 make g++
+
 RUN npm ci --workspaces
 
 # Copy source
