@@ -26,7 +26,7 @@ A strategy game in which the objective is to expand your empire through three pa
 - [x] **Task 6** — Province renderer: React component, SVG or Canvas, color-coded by owner/biome
 - [x] **Task 7** — Province data seeder: ~40 provinces, random biomes, starting factions (6 AI + 1 player)
 - [x] **Task 8** — Map interaction: click province → info panel with owner, garrison, biome, strategic value
-- [ ] **Task 9** — Faction system: data model for name, color, government type, resources (gold, food, manpower)
+- [x] **Task 9** — Faction system: data model for name, color, government type, resources (gold, food, manpower)
 - [ ] **Task 10** — Turn engine: turn start, resource ticks, event queue, end-of-turn handler
 - [ ] **Task 11** — Fog of War: provinces outside own range hidden, revealed by troops/spies
 - [ ] **Task 12** — Minimap component for overview
@@ -180,7 +180,7 @@ You secretly control most kingdoms through puppets (75%+ shadow influence trigge
 
 | Phase | Focus | Tasks | Status |
 |---|---|---|---|
-| 1 | Foundation, map, infrastructure | 1–14 | 🔄 In progress (8/14 done) |
+| 1 | Foundation, map, infrastructure | 1–14 | 🔄 In progress (9/14 done) |
 | 2 | War system complete | 15–30 | ⬜ Not started |
 | 3 | Diplomacy complete | 31–43 | ⬜ Not started |
 | 4 | Intrigue complete | 44–57 | ⬜ Not started |
