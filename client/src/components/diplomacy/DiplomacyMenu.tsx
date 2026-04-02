@@ -8,6 +8,7 @@ interface DiplomacyMenuProps {
   onClose: () => void;
   onOffer: (targetId: string, treaty: DiplomacyType) => void;
   onGift: (targetId: string, amount: number) => void;
+  onMission?: (targetId: string, gold: number) => void;
 }
 
 export default function DiplomacyMenu({
@@ -17,6 +18,7 @@ export default function DiplomacyMenu({
   onClose,
   onOffer,
   onGift,
+  onMission,
 }: DiplomacyMenuProps) {
   const others = factions.filter((f) => !f.isPlayer);
 
@@ -48,6 +50,7 @@ export default function DiplomacyMenu({
                 playerGold={playerFaction.gold}
                 onOffer={(treaty) => onOffer(faction.id, treaty)}
                 onGift={(amount) => onGift(faction.id, amount)}
+                onMission={onMission ? (gold) => onMission(faction.id, gold) : undefined}
               />
             );
           })}
@@ -66,9 +69,10 @@ interface FactionRowProps {
   playerGold: number;
   onOffer: (treaty: DiplomacyType) => void;
   onGift: (amount: number) => void;
+  onMission?: (gold: number) => void;
 }
 
-function FactionRow({ faction, opinion, treaties, playerGold, onOffer, onGift }: FactionRowProps) {
+function FactionRow({ faction, opinion, treaties, playerGold, onOffer, onGift, onMission }: FactionRowProps) {
   const opinionColor =
     opinion >= OPINION_ALLIANCE_THRESHOLD ? 'text-green-400' :
     opinion <= OPINION_WAR_THRESHOLD      ? 'text-red-400'   :
@@ -121,6 +125,7 @@ function FactionRow({ faction, opinion, treaties, playerGold, onOffer, onGift }:
           {canNap      && <ActionBtn label="NAP"       onClick={() => onOffer('non_aggression')} color="blue" />}
           {canVassalize && <ActionBtn label="Vassalize" onClick={() => onOffer('vassalage')} color="purple" />}
           <ActionBtn label="Gift 50g" onClick={() => onGift(50)} color="stone" disabled={playerGold < 50} />
+          {onMission && <ActionBtn label="Mission 50g" onClick={() => onMission(50)} color="stone" disabled={playerGold < 50} title="Spend 50g on a diplomatic mission to boost opinion" />}
         </div>
       </div>
     </div>
@@ -135,7 +140,7 @@ const TREATY_LABEL: Partial<Record<DiplomacyType, string>> = {
   non_aggression: '🤝 NAP',
 };
 
-function ActionBtn({ label, onClick, color, disabled }: { label: string; onClick: () => void; color: string; disabled?: boolean }) {
+function ActionBtn({ label, onClick, color, disabled, title }: { label: string; onClick: () => void; color: string; disabled?: boolean; title?: string }) {
   const base = 'px-2 py-0.5 rounded text-xs border transition-colors';
   const colors: Record<string, string> = {
     green:  'bg-green-900 hover:bg-green-800 border-green-700 text-green-300',
@@ -149,6 +154,7 @@ function ActionBtn({ label, onClick, color, disabled }: { label: string; onClick
     <button
       onClick={onClick}
       disabled={disabled}
+      title={title}
       className={`${base} ${colors[color]} disabled:opacity-40 disabled:cursor-not-allowed`}
     >
       {label}

@@ -167,8 +167,8 @@ You secretly control most kingdoms through puppets (75%+ shadow influence trigge
 - [x] **Task 64** — Main menu & game creation: difficulty, starting faction selection, map preview
 - [x] **Task 65** — In-game HUD: resource bar, turn info, notifications, action menu
 - [x] **Task 66** — Province detail panel: owner, biome, garrison, economy, diplomatic status, intrigue activity
-- [ ] **Task 67** — Army management UI: formation editor with drag-and-drop, troop strengths, commander assignment
-- [ ] **Task 68** — Diplomacy UI: negotiation dialog with offer/demand slots, opinion preview
+- [x] **Task 67** — Army management UI: formation editor with drag-and-drop, troop strengths, commander assignment
+- [x] **Task 68** — Diplomacy UI: negotiation dialog with offer/demand slots, opinion preview
 - [ ] **Task 69** — Intrigue UI: agent map, action selection, risk assessment, network strength visualization
 - [ ] **Task 70** — Tutorial system: guided first game with tooltips for all three paths
 - [ ] **Task 71** — Responsive mobile layout: touch controls for map, bottom-sheet panels
@@ -184,7 +184,7 @@ You secretly control most kingdoms through puppets (75%+ shadow influence trigge
 | 2 | War system complete | 15–30 | ✅ Complete |
 | 3 | Diplomacy complete | 31–43 | ✅ Complete |
 | 4 | Intrigue complete | 44–57 | ✅ Complete |
-| 5 | AI, UI, victory, polish | 58–72 | 🔄 In progress (9/15 done) |
+| 5 | AI, UI, victory, polish | 58–72 | 🔄 In progress (11/15 done) |
 
 **Total: 72 tasks across 5 phases**
 

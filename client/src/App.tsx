@@ -79,6 +79,20 @@ export default function App() {
     if (gameId) await loadState(gameId);
   }
 
+  async function handleMission(targetId: string, gold: number) {
+    if (!gameId || !playerFactionId) return;
+    const res = await fetch('/api/diplomacy/mission', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ gameId, fromId: playerFactionId, toId: targetId, goldSpent: gold }),
+    });
+    const data = await res.json() as { ok: boolean; opinionGained?: number; reason?: string };
+    setStatusMsg(data.ok
+      ? data.opinionGained ? `Mission success! +${data.opinionGained} opinion` : 'Mission failed (gold lost)'
+      : (data.reason ?? 'Mission failed'));
+    if (gameId) await loadState(gameId);
+  }
+
   async function handleGift(targetId: string, amount: number) {
     if (!gameId || !playerFactionId) return;
     const res = await fetch('/api/diplomacy/gift', {
@@ -194,6 +208,7 @@ export default function App() {
           onClose={() => setShowDiplomacy(false)}
           onOffer={handleDiplomacyOffer}
           onGift={handleGift}
+          onMission={handleMission}
         />
       )}
 
