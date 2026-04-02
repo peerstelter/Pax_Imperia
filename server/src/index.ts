@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import { getDb } from './db/database.js';
 import gameRouter from './routes/game.js';
 import factionRouter from './routes/faction.js';
 import provinceRouter from './routes/province.js';
@@ -21,7 +22,9 @@ app.use('/api/diplomacy', diplomacyRouter);
 app.use('/api/intrigue', intrigueRouter);
 
 app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok' });
+  const db = getDb();
+  const row = db.prepare('SELECT sqlite_version() as v').get() as { v: string };
+  res.json({ status: 'ok', sqlite: row.v });
 });
 
 app.listen(PORT, () => {
