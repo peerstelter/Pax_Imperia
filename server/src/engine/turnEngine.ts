@@ -5,6 +5,7 @@ import { updateFogOfWar } from './fogOfWar.js';
 import { tickLogistics } from './logistics.js';
 import { applyWarExhaustion } from './warExhaustion.js';
 import { tickOpinionDecay, tickTreatyOpinionBonuses } from './opinionEngine.js';
+import { tradeGoldTick, vassalTributeTick } from './diplomacyEngine.js';
 import { INTRIGUE_PUPPET_THRESHOLD } from '@pax-imperia/shared';
 
 interface GameRow { id: string; turn: number; player_faction: string; winner: string | null }
@@ -55,7 +56,11 @@ export function advanceTurn(db: Database.Database, gameId: string): {
     // 4. War exhaustion effects (morale drain, gold penalty)
     applyWarExhaustion(db, gameId);
 
-    // 4. Resource tick
+    // 4a. Treaty economic effects (trade gold, vassal tribute)
+    tradeGoldTick(db, gameId);
+    vassalTributeTick(db, gameId);
+
+    // 4b. Resource tick
     tickFactionResources(db, gameId);
 
     // 3. Increment turn
