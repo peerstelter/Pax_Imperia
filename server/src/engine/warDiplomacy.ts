@@ -193,6 +193,59 @@ function callToArms(
   return pullIns;
 }
 
+// ── Mediation ─────────────────────────────────────────────────────────────────
+
+/**
+ * Player (mediatorId) offers to mediate a conflict between factionA and factionB.
+ *
+ * On success: both parties get +12 opinion toward the mediator and a small (+8)
+ * boost between themselves (reduced tensions). The mediator must have opinion > 0
+ * with both parties to be credible.
+ *
+ * Returns ok:false if the mediator lacks standing with either party.
+ */
+export function offerMediation(
+  db: Database.Database,
+  gameId: string,
+  mediatorId: string,
+  factionA: string,
+  factionB: string,
+): { ok: boolean; reason?: string } {
+  const opinionWithA = getOpinionLocal(db, gameId, mediatorId, factionA);
+  const opinionWithB = getOpinionLocal(db, gameId, mediatorId, factionB);
+
+  if (opinionWithA <= 0) return { ok: false, reason: `${factionA} does not trust the mediator` };
+  if (opinionWithB <= 0) return { ok: false, reason: `${factionB} does not trust the mediator` };
+
+  // Both parties gain opinion toward mediator
+  applyOpinionPenalty(db, gameId, mediatorId, 12, factionA);
+  applyOpinionPenalty(db, gameId, mediatorId, 12, factionB);
+
+  // Reduced hostility between the two conflicting parties
+  applyOpinionPenalty(db, gameId, factionA, 8, factionB);
+
+  const game = db.prepare('SELECT turn FROM games WHERE id = ?').get(gameId) as GameRow;
+  db.prepare(
+    `INSERT INTO turn_log (id, game_id, turn, type, description, faction_id, data)
+     VALUES (?, ?, ?, 'mediation', ?, ?, ?)`,
+  ).run(
+    randomUUID(), gameId, game.turn,
+    `${mediatorId} mediated conflict between ${factionA} and ${factionB}`,
+    mediatorId,
+    JSON.stringify({ factionA, factionB }),
+  );
+
+  return { ok: true };
+}
+
+function getOpinionLocal(db: Database.Database, gameId: string, a: string, b: string): number {
+  const [fa, fb] = [a, b].sort();
+  const row = db
+    .prepare('SELECT opinion FROM diplomatic_relations WHERE game_id = ? AND faction_a = ? AND faction_b = ?')
+    .get(gameId, fa, fb) as { opinion: number } | undefined;
+  return row?.opinion ?? 0;
+}
+
 // ── War Aid ───────────────────────────────────────────────────────────────────
 
 /**

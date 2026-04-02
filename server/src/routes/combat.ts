@@ -3,7 +3,7 @@ import { randomUUID } from 'crypto';
 import { getDb } from '../db/database.js';
 import { resolveCombat } from '../engine/combatResolver.js';
 import { resolveSiegeTurn, initSiege } from '../engine/siegeEngine.js';
-import { declareWar, makePeace, formAlliance, breakAlliance, grantWarAid } from '../engine/warDiplomacy.js';
+import { declareWar, makePeace, formAlliance, breakAlliance, grantWarAid, offerMediation } from '../engine/warDiplomacy.js';
 import { buildDefaultFormation } from '@pax-imperia/shared';
 import type { Unit, Commander } from '@pax-imperia/shared';
 import type { SiegeWeaponType } from '@pax-imperia/shared';
@@ -69,6 +69,19 @@ router.post('/war-aid', (req: Request, res: Response) => {
   const db = getDb();
   grantWarAid(db, gameId, helperId, beneficiaryId);
   return res.status(200).json({ message: 'War aid opinion bonus applied' });
+});
+
+// POST /api/combat/mediate — player mediates a conflict between two AI factions
+router.post('/mediate', (req: Request, res: Response) => {
+  const { gameId, mediatorId, factionA, factionB } = req.body as {
+    gameId: string; mediatorId: string; factionA: string; factionB: string;
+  };
+  if (!gameId || !mediatorId || !factionA || !factionB)
+    return res.status(400).json({ error: 'gameId, mediatorId, factionA, factionB required' });
+
+  const db = getDb();
+  const result = offerMediation(db, gameId, mediatorId, factionA, factionB);
+  return result.ok ? res.status(200).json(result) : res.status(400).json(result);
 });
 
 // POST /api/combat/resolve — resolve a field battle between two armies
