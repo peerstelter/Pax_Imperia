@@ -1,4 +1,4 @@
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 WORKDIR /app
 
 # Copy workspace manifests
@@ -17,6 +17,7 @@ COPY client/ ./client/
 RUN npm run build --workspace=shared
 RUN npm run build --workspace=client
 
-# The dist/ output is the only artifact needed
-FROM scratch
-COPY --from=builder /app/client/dist /dist
+# ── Nginx serving stage ───────────────────────────────────────────────────────
+FROM nginx:1.25-alpine
+COPY --from=builder /app/client/dist /usr/share/nginx/html
+# nginx.conf is mounted by docker-compose; this default is a fallback
