@@ -69,7 +69,7 @@ A strategy game in which the objective is to expand your empire through three pa
 - [x] **Task 16** — Biome unit variants as sub-classes with inherited stats and unique abilities
 - [x] **Task 17** — Army builder: organize units into rows/formations (front line, second row, flanks)
 - [x] **Task 18** — Siege weapons: Ram, Catapult, Siege Tower, Ladders — each with distinct mechanics
-- [ ] **Task 19** — Combat resolver: turn-based, counter bonus (+25% attack), formation modifiers, random factor ±10%
+- [x] **Task 19** — Combat resolver: turn-based, counter bonus (+25% attack), formation modifiers, random factor ±10%
 - [ ] **Task 20** — Siege engine: wall strength mechanic, breach opening, defender sortie option
 - [ ] **Task 21** — Field battle mechanic: open terrain, terrain bonuses (forest, hills), ambush option
 - [ ] **Task 22** — War declaration & casus belli system (claim, revenge, expansion)
@@ -181,7 +181,7 @@ You secretly control most kingdoms through puppets (75%+ shadow influence trigge
 | Phase | Focus | Tasks | Status |
 |---|---|---|---|
 | 1 | Foundation, map, infrastructure | 1–14 | ✅ Complete |
-| 2 | War system complete | 15–30 | 🔄 In progress (4/16 done) |
+| 2 | War system complete | 15–30 | 🔄 In progress (5/16 done) |
 | 3 | Diplomacy complete | 31–43 | ⬜ Not started |
 | 4 | Intrigue complete | 44–57 | ⬜ Not started |
 | 5 | AI, UI, victory, polish | 58–72 | ⬜ Not started |
