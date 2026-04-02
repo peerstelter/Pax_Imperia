@@ -1,6 +1,9 @@
 FROM node:24-alpine AS builder
 WORKDIR /app
 
+# Build tools required by better-sqlite3 (native addon compilation)
+RUN apk add --no-cache python3 make g++
+
 COPY package.json package-lock.json ./
 COPY client/package.json ./client/
 COPY server/package.json ./server/
@@ -17,6 +20,9 @@ RUN npm run build --workspace=server
 # ── Runtime image ─────────────────────────────────────────────────────────────
 FROM node:24-alpine
 WORKDIR /app
+
+# Build tools needed to recompile better-sqlite3 native module at install time
+RUN apk add --no-cache python3 make g++
 
 COPY package.json package-lock.json ./
 COPY client/package.json ./client/
