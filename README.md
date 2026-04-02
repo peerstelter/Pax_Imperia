@@ -91,7 +91,7 @@ Each AI faction has a personality that drives its decisions:
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/pax-imperia.git
+git clone https://github.com/peerstelter/pax_imperia.git
 cd pax-imperia
 
 # Install dependencies
