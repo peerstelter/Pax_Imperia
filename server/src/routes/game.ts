@@ -47,11 +47,17 @@ router.get('/factions', (_req: Request, res: Response) => {
 
 // POST /api/game — create and seed a new game
 router.post('/', (req: Request, res: Response) => {
-  const { playerFactionId } = req.body as { playerFactionId?: string };
+  const { playerFactionId, difficulty = 'normal' } = req.body as {
+    playerFactionId?: string;
+    difficulty?: 'easy' | 'normal' | 'hard';
+  };
   if (!playerFactionId) return res.status(400).json({ error: 'playerFactionId required' });
 
   const db = getDb();
   const id = randomUUID();
+
+  // Difficulty is stored as metadata in turn_log on game start (Easy = more gold, Hard = less)
+  const startingGoldMod = difficulty === 'easy' ? 1.5 : difficulty === 'hard' ? 0.7 : 1.0;
 
   db.prepare(
     'INSERT INTO games (id, player_faction, turn) VALUES (?, ?, 1)',
@@ -59,6 +65,15 @@ router.post('/', (req: Request, res: Response) => {
 
   try {
     seedGame(db, id, playerFactionId);
+    // Apply difficulty gold modifier to player faction
+    if (startingGoldMod !== 1.0) {
+      db.prepare('UPDATE factions SET gold = CAST(gold * ? AS INTEGER) WHERE game_id = ? AND id = ?')
+        .run(startingGoldMod, id, playerFactionId);
+    }
+    // Log difficulty choice
+    db.prepare(
+      `INSERT INTO turn_log (id, game_id, turn, type, description, data) VALUES (?, ?, 1, 'game_start', ?, ?)`,
+    ).run(randomUUID(), id, `New game started (${difficulty})`, JSON.stringify({ playerFactionId, difficulty }));
   } catch (err) {
     db.prepare('DELETE FROM games WHERE id = ?').run(id);
     return res.status(400).json({ error: (err as Error).message });

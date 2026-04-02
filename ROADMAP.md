@@ -163,8 +163,8 @@ You secretly control most kingdoms through puppets (75%+ shadow influence trigge
 - [x] **Task 60** — AI diplomacy strategy: opinion-based treaty offers, marriage politics, alliance-seeking against strongest player
 - [x] **Task 61** — AI intrigue strategy: weak factions sabotage strong ones via propaganda/bribery
 - [x] **Task 62** — Event system: random events (plague, famine, succession crisis) with decision options and consequences
-- [ ] **Task 63** — Victory condition checker: war victory (X% provinces), diplomatic victory (emperor vote), intrigue victory (X puppets)
-- [ ] **Task 64** — Main menu & game creation: difficulty, starting faction selection, map preview
+- [x] **Task 63** — Victory condition checker: war victory (X% provinces), diplomatic victory (emperor vote), intrigue victory (X puppets)
+- [x] **Task 64** — Main menu & game creation: difficulty, starting faction selection, map preview
 - [ ] **Task 65** — In-game HUD: resource bar, turn info, notifications, action menu
 - [ ] **Task 66** — Province detail panel: owner, biome, garrison, economy, diplomatic status, intrigue activity
 - [ ] **Task 67** — Army management UI: formation editor with drag-and-drop, troop strengths, commander assignment
@@ -184,7 +184,7 @@ You secretly control most kingdoms through puppets (75%+ shadow influence trigge
 | 2 | War system complete | 15–30 | ✅ Complete |
 | 3 | Diplomacy complete | 31–43 | ✅ Complete |
 | 4 | Intrigue complete | 44–57 | ✅ Complete |
-| 5 | AI, UI, victory, polish | 58–72 | 🔄 In progress (5/15 done) |
+| 5 | AI, UI, victory, polish | 58–72 | 🔄 In progress (7/15 done) |
 
 **Total: 72 tasks across 5 phases**
 
