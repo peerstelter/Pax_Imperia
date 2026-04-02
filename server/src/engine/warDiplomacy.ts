@@ -193,6 +193,36 @@ function callToArms(
   return pullIns;
 }
 
+// ── War Aid ───────────────────────────────────────────────────────────────────
+
+/**
+ * Grant the war-aid opinion bonus when one faction fights alongside another.
+ * Both sides gain +15 opinion (they helped each other).
+ */
+export function grantWarAid(
+  db: Database.Database,
+  gameId: string,
+  helperId: string,
+  beneficiaryId: string,
+): void {
+  const [a, b] = [helperId, beneficiaryId].sort();
+  db.prepare(
+    `UPDATE diplomatic_relations SET opinion = MAX(-100, MIN(100, opinion + 15))
+     WHERE game_id = ? AND faction_a = ? AND faction_b = ?`,
+  ).run(gameId, a, b);
+
+  const game = db.prepare('SELECT turn FROM games WHERE id = ?').get(gameId) as GameRow;
+  db.prepare(
+    `INSERT INTO turn_log (id, game_id, turn, type, description, faction_id, data)
+     VALUES (?, ?, ?, 'war_aid', ?, ?, ?)`,
+  ).run(
+    randomUUID(), gameId, game.turn,
+    `${helperId} aided ${beneficiaryId} in war (+15 opinion)`,
+    helperId,
+    JSON.stringify({ beneficiaryId }),
+  );
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function applyOpinionPenalty(

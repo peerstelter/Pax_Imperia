@@ -3,7 +3,7 @@ import { randomUUID } from 'crypto';
 import { getDb } from '../db/database.js';
 import { resolveCombat } from '../engine/combatResolver.js';
 import { resolveSiegeTurn, initSiege } from '../engine/siegeEngine.js';
-import { declareWar, makePeace, formAlliance, breakAlliance } from '../engine/warDiplomacy.js';
+import { declareWar, makePeace, formAlliance, breakAlliance, grantWarAid } from '../engine/warDiplomacy.js';
 import { buildDefaultFormation } from '@pax-imperia/shared';
 import type { Unit, Commander } from '@pax-imperia/shared';
 import type { SiegeWeaponType } from '@pax-imperia/shared';
@@ -56,6 +56,19 @@ router.post('/alliance', (req: Request, res: Response) => {
     breakAlliance(db, gameId, factionA, factionB);
     return res.status(200).json({ message: 'Alliance dissolved' });
   }
+});
+
+// POST /api/combat/war-aid — record that helperId fought alongside beneficiaryId (+15 opinion both ways)
+router.post('/war-aid', (req: Request, res: Response) => {
+  const { gameId, helperId, beneficiaryId } = req.body as {
+    gameId: string; helperId: string; beneficiaryId: string;
+  };
+  if (!gameId || !helperId || !beneficiaryId)
+    return res.status(400).json({ error: 'gameId, helperId, beneficiaryId required' });
+
+  const db = getDb();
+  grantWarAid(db, gameId, helperId, beneficiaryId);
+  return res.status(200).json({ message: 'War aid opinion bonus applied' });
 });
 
 // POST /api/combat/resolve — resolve a field battle between two armies
