@@ -3,6 +3,7 @@ import { getDb } from '../db/database.js';
 import type { IntrigueActionType } from '@pax-imperia/shared';
 import { buildSpyNetwork, getNetworkStrength, listNetworks } from '../engine/spyNetwork.js';
 import { queueIntrigueAction } from '../engine/intrigueEngine.js';
+import { supportPretender } from '../engine/pretenderEngine.js';
 
 const router = Router();
 
@@ -96,6 +97,19 @@ router.get('/espionage/:gameId/:spyingFactionId/:targetFactionId', (req: Request
     troopStrength: troops,
     activeIntrigueOps: intrigueOps,
   });
+});
+
+// POST /api/intrigue/pretender — back a pretender to trigger civil war in target faction
+router.post('/pretender', (req: Request, res: Response) => {
+  const { gameId, backerId, targetFactionId } = req.body as {
+    gameId: string; backerId: string; targetFactionId: string;
+  };
+  if (!gameId || !backerId || !targetFactionId)
+    return res.status(400).json({ error: 'gameId, backerId, targetFactionId required' });
+
+  const db = getDb();
+  const result = supportPretender(db, gameId, backerId, targetFactionId);
+  return result.ok ? res.status(201).json(result) : res.status(400).json(result);
 });
 
 // POST /api/intrigue/network/build — place an agent in a province
