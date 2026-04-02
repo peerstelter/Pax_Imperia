@@ -6,6 +6,7 @@ import ProvinceInfoPanel from './components/map/ProvinceInfoPanel.js';
 import Minimap from './components/map/Minimap.js';
 import DiplomacyMenu from './components/diplomacy/DiplomacyMenu.js';
 import MenuPage from './pages/MenuPage.js';
+import TutorialGuide from './components/tutorial/TutorialGuide.js';
 
 // ── App state ─────────────────────────────────────────────────────────────────
 
@@ -21,6 +22,7 @@ export default function App() {
   const [showDiplomacy, setShowDiplomacy] = useState(false);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
 
   // ── Load game state ──────────────────────────────────────────────────────────
 
@@ -44,6 +46,7 @@ export default function App() {
   function handleGameStart(id: string, factionId: string) {
     setGameId(id);
     setPlayerFactionId(factionId);
+    setShowTutorial(true);
     setScreen('game');
   }
 
@@ -211,6 +214,9 @@ export default function App() {
           onMission={handleMission}
         />
       )}
+
+      {/* Tutorial */}
+      {showTutorial && <TutorialGuide onDismiss={() => setShowTutorial(false)} />}
 
       {/* Victory banner */}
       {gameState.winner && (
