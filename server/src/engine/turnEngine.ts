@@ -7,6 +7,7 @@ import { applyWarExhaustion } from './warExhaustion.js';
 import { tickOpinionDecay, tickTreatyOpinionBonuses } from './opinionEngine.js';
 import { tradeGoldTick, vassalTributeTick } from './diplomacyEngine.js';
 import { checkDiplomaticVictory } from './electionEngine.js';
+import { runAiDecisions } from './aiDecisionEngine.js';
 import { INTRIGUE_PUPPET_THRESHOLD } from '@pax-imperia/shared';
 
 interface GameRow { id: string; turn: number; player_faction: string; winner: string | null }
@@ -44,6 +45,9 @@ export function advanceTurn(db: Database.Database, gameId: string): {
   const events: string[] = [];
 
   db.transaction(() => {
+    // 0. AI decisions (before resource tick so they act on current state)
+    runAiDecisions(db, gameId);
+
     // 1. Resolve pending intrigue actions
     resolveIntrigueActions(db, gameId, game.turn, events);
 

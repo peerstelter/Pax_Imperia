@@ -111,7 +111,7 @@ Enough kingdoms vote to restore the empire under your rule (voting mechanic).
 - [x] **Task 40** — Opinion events: treaty breaking, aggressive expansion (malus on all neighbors), war aid (bonus)
 - [x] **Task 41** — Diplomatic victory: voting mechanic — X factions elect player as emperor
 - [x] **Task 42** — Mediation offers: player can resolve AI conflicts → opinion from both parties
-- [ ] **Task 43** — Faction personalities: aggressive / expansionist / isolationist / trade-focused — influences AI decisions
+- [x] **Task 43** — Faction personalities: aggressive / expansionist / isolationist / trade-focused — influences AI decisions
 
 ---
 
@@ -182,7 +182,7 @@ You secretly control most kingdoms through puppets (75%+ shadow influence trigge
 |---|---|---|---|
 | 1 | Foundation, map, infrastructure | 1–14 | ✅ Complete |
 | 2 | War system complete | 15–30 | ✅ Complete |
-| 3 | Diplomacy complete | 31–43 | 🔄 In progress (12/13 done) |
+| 3 | Diplomacy complete | 31–43 | ✅ Complete |
 | 4 | Intrigue complete | 44–57 | ⬜ Not started |
 | 5 | AI, UI, victory, polish | 58–72 | ⬜ Not started |
 
