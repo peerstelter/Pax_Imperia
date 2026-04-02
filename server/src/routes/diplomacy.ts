@@ -4,6 +4,7 @@ import {
   proposeAlliance, dissolveAlliance,
   proposeMarriage, proposeTrade,
   vassalize, proposeNap,
+  sendDiplomaticMission, sendGift,
 } from '../engine/diplomacyEngine.js';
 import { adjustOpinion } from '../engine/opinionEngine.js';
 
@@ -62,6 +63,32 @@ router.post('/dissolve', (req: Request, res: Response) => {
   const db = getDb();
   if (treaty === 'alliance') dissolveAlliance(db, gameId, fromId, toId);
   return res.status(200).json({ message: 'Treaty dissolved' });
+});
+
+// POST /api/diplomacy/mission — spend gold to boost opinion
+router.post('/mission', (req: Request, res: Response) => {
+  const { gameId, fromId, toId, goldSpent } = req.body as {
+    gameId: string; fromId: string; toId: string; goldSpent: number;
+  };
+  if (!gameId || !fromId || !toId || goldSpent == null)
+    return res.status(400).json({ error: 'gameId, fromId, toId, goldSpent required' });
+
+  const db = getDb();
+  const result = sendDiplomaticMission(db, gameId, fromId, toId, Number(goldSpent));
+  return result.ok ? res.status(200).json(result) : res.status(400).json(result);
+});
+
+// POST /api/diplomacy/gift — send gold gift to boost opinion
+router.post('/gift', (req: Request, res: Response) => {
+  const { gameId, fromId, toId, goldAmount } = req.body as {
+    gameId: string; fromId: string; toId: string; goldAmount: number;
+  };
+  if (!gameId || !fromId || !toId || goldAmount == null)
+    return res.status(400).json({ error: 'gameId, fromId, toId, goldAmount required' });
+
+  const db = getDb();
+  const result = sendGift(db, gameId, fromId, toId, Number(goldAmount));
+  return result.ok ? res.status(200).json(result) : res.status(400).json(result);
 });
 
 export default router;

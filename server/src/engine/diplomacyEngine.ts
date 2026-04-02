@@ -168,6 +168,80 @@ export function vassalTributeTick(db: Database.Database, gameId: string): void {
   }
 }
 
+// ── Task 38: Diplomatic missions ─────────────────────────────────────────────
+
+/**
+ * Send a diplomatic mission: spend gold to boost opinion.
+ * Success probability is based on current opinion (friendly targets are easier).
+ * Returns opinion gained (0 on failure).
+ */
+export function sendDiplomaticMission(
+  db: Database.Database,
+  gameId: string,
+  senderId: string,
+  targetId: string,
+  goldSpent: number,
+): { ok: boolean; opinionGained: number; reason?: string } {
+  if (goldSpent < 20) return { ok: false, opinionGained: 0, reason: 'Minimum mission cost is 20 gold' };
+
+  const faction = db.prepare('SELECT gold FROM factions WHERE game_id = ? AND id = ?').get(gameId, senderId) as { gold: number } | undefined;
+  if (!faction) return { ok: false, opinionGained: 0, reason: 'Faction not found' };
+  if (faction.gold < goldSpent) return { ok: false, opinionGained: 0, reason: `Insufficient gold (need ${goldSpent}, have ${faction.gold})` };
+
+  db.prepare('UPDATE factions SET gold = gold - ? WHERE game_id = ? AND id = ?').run(goldSpent, gameId, senderId);
+
+  const currentOpinion = getOpinion(db, gameId, senderId, targetId);
+  // Success chance: 50% base + 1% per current opinion point (max 90%)
+  const successChance = Math.min(0.9, 0.5 + currentOpinion * 0.01);
+  const roll = Math.random();
+
+  if (roll > successChance) {
+    return { ok: true, opinionGained: 0 };  // Gold lost but mission failed
+  }
+
+  // Opinion gain scales with gold spent (diminishing returns)
+  const gained = Math.floor(Math.sqrt(goldSpent) * 2);
+  adjustOpinion(db, gameId, senderId, targetId, gained);
+
+  const game = db.prepare('SELECT turn FROM games WHERE id = ?').get(gameId) as GameRow;
+  logDiploEvent(db, gameId, game.turn, 'diplomatic_mission', `Mission: ${senderId} → ${targetId} (+${gained} opinion)`, senderId, { targetId, goldSpent, gained });
+
+  return { ok: true, opinionGained: gained };
+}
+
+// ── Task 39: Gift system ──────────────────────────────────────────────────────
+
+/**
+ * Send a gift of gold to boost opinion.
+ * Diminishing returns: each gift this same turn reduces effectiveness.
+ */
+export function sendGift(
+  db: Database.Database,
+  gameId: string,
+  senderId: string,
+  targetId: string,
+  goldAmount: number,
+): { ok: boolean; opinionGained: number; reason?: string } {
+  if (goldAmount < 10) return { ok: false, opinionGained: 0, reason: 'Minimum gift is 10 gold' };
+
+  const faction = db.prepare('SELECT gold FROM factions WHERE game_id = ? AND id = ?').get(gameId, senderId) as { gold: number } | undefined;
+  if (!faction) return { ok: false, opinionGained: 0, reason: 'Faction not found' };
+  if (faction.gold < goldAmount) return { ok: false, opinionGained: 0, reason: `Insufficient gold` };
+
+  db.prepare('UPDATE factions SET gold = gold - ? WHERE game_id = ? AND id = ?').run(goldAmount, gameId, senderId);
+  // Target receives the gold
+  db.prepare('UPDATE factions SET gold = gold + ? WHERE game_id = ? AND id = ?').run(goldAmount, gameId, targetId);
+
+  // Opinion gain: sqrt(amount) capped at 20
+  const gained = Math.min(20, Math.floor(Math.sqrt(goldAmount)));
+  adjustOpinion(db, gameId, senderId, targetId, gained);
+
+  const game = db.prepare('SELECT turn FROM games WHERE id = ?').get(gameId) as GameRow;
+  logDiploEvent(db, gameId, game.turn, 'gift', `Gift: ${senderId} → ${targetId} (${goldAmount}g, +${gained} opinion)`, senderId, { targetId, goldAmount, gained });
+
+  return { ok: true, opinionGained: gained };
+}
+
 // ── Task 37: Non-aggression pacts ─────────────────────────────────────────────
 
 export function proposeNap(
