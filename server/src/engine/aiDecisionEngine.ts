@@ -3,6 +3,8 @@ import type { FactionPersonality } from '@pax-imperia/shared';
 import { INTRIGUE_PUPPET_THRESHOLD } from '@pax-imperia/shared';
 import { proposeAlliance, proposeTrade, proposeMarriage, proposeNap } from './diplomacyEngine.js';
 import { declareWar } from './warDiplomacy.js';
+import { queueIntrigueAction } from './intrigueEngine.js';
+import { buildSpyNetwork } from './spyNetwork.js';
 
 interface FactionRow {
   id: string;
@@ -23,13 +25,14 @@ interface ProvinceCount { owner_id: string; cnt: number }
 
 /**
  * Run AI decisions for all non-player factions.
- * Called once per turn from advanceTurn (after resource tick, before log).
+ * Called once per turn from advanceTurn.
  *
- * Each personality has weighted tendencies:
- *   aggressive   — prefers war when militarily superior
- *   expansionist — declares war at lower strength advantage, rarely seeks peace
- *   isolationist — avoids war, signs NAPs, rarely allies
- *   merchant     — prioritises trade agreements, gifts, diplomatic missions
+ * Each personality evaluates three domains: war, diplomacy, intrigue.
+ * Weights per personality:
+ *   aggressive   — war >> intrigue > diplomacy
+ *   expansionist — war > diplomacy > intrigue
+ *   isolationist — diplomacy >> intrigue, avoids war
+ *   merchant     — diplomacy >> intrigue, avoids war
  */
 export function runAiDecisions(db: Database.Database, gameId: string): void {
   const factions = db
@@ -111,6 +114,13 @@ function runFactionAI(
         if (opinion >= 50 && !treaties.includes('alliance') && myStrength < otherStrength && roll < 0.1) {
           proposeAlliance(db, gameId, self.id, other.id);
         }
+        // Intrigue: spy on strong rivals; assassinate when powerful enough
+        if (myStrength < otherStrength && roll < 0.08) {
+          queueIntrigueAction(db, gameId, 'spy', self.id, other.id);
+        }
+        if (myStrength > otherStrength && roll < 0.05) {
+          queueIntrigueAction(db, gameId, 'assassinate', self.id, other.id);
+        }
         break;
 
       case 'expansionist':
@@ -122,6 +132,13 @@ function runFactionAI(
         if (opinion >= 50 && !treaties.includes('alliance') && roll < 0.12) {
           proposeAlliance(db, gameId, self.id, other.id);
         }
+        // Sabotage border provinces to weaken before war
+        if (myStrength > otherStrength && roll < 0.06) {
+          const borderProvince = db
+            .prepare(`SELECT id FROM provinces WHERE game_id = ? AND owner_id = ? LIMIT 1`)
+            .get(gameId, other.id) as { id: string } | undefined;
+          if (borderProvince) queueIntrigueAction(db, gameId, 'sabotage', self.id, other.id, borderProvince.id);
+        }
         break;
 
       case 'isolationist':
@@ -132,6 +149,10 @@ function runFactionAI(
         // Very rarely ally
         if (opinion >= 70 && !treaties.includes('alliance') && roll < 0.05) {
           proposeAlliance(db, gameId, self.id, other.id);
+        }
+        // Build spy networks for defense (in own provinces, but spy on strong neighbours)
+        if (myStrength < otherStrength && roll < 0.07) {
+          queueIntrigueAction(db, gameId, 'spy', self.id, other.id);
         }
         break;
 
@@ -148,8 +169,20 @@ function runFactionAI(
         if (opinion >= 50 && treaties.includes('trade') && !treaties.includes('alliance') && roll < 0.08) {
           proposeAlliance(db, gameId, self.id, other.id);
         }
+        // Bribe rivals, build spy networks on key trade routes
+        if (opinion < 0 && self.gold > 150 && roll < 0.07) {
+          queueIntrigueAction(db, gameId, 'bribe', self.id, other.id);
+        }
         break;
     }
+  }
+
+  // All personalities: occasionally build spy networks in richest own province
+  if (self.gold > 100 && Math.random() < 0.05) {
+    const ownProvince = db
+      .prepare(`SELECT id FROM provinces WHERE game_id = ? AND owner_id = ? ORDER BY strategic_value DESC LIMIT 1`)
+      .get(gameId, self.id) as { id: string } | undefined;
+    if (ownProvince) buildSpyNetwork(db, gameId, self.id, ownProvince.id);
   }
 }
 
