@@ -75,7 +75,7 @@ A strategy game in which the objective is to expand your empire through three pa
 - [x] **Task 22** — War declaration & casus belli system (claim, revenge, expansion)
 - [x] **Task 23** — Peace negotiations: annexation, tribute, vassalization, white peace
 - [x] **Task 24** — Military alliance system: joint war entry logic, call-to-arms mechanic
-- [ ] **Task 25** — Recruitment: costs in gold + manpower, training time, province-specific units
+- [x] **Task 25** — Recruitment: costs in gold + manpower, training time, province-specific units
 - [ ] **Task 26** — Logistics: supply lines, attrition on long campaigns, winter penalty in Tundra
 - [ ] **Task 27** — Battle report UI: round log, casualties, counter highlights, victory condition
 - [ ] **Task 28** — War goal tracker: progress display for "control X provinces"
@@ -181,7 +181,7 @@ You secretly control most kingdoms through puppets (75%+ shadow influence trigge
 | Phase | Focus | Tasks | Status |
 |---|---|---|---|
 | 1 | Foundation, map, infrastructure | 1–14 | ✅ Complete |
-| 2 | War system complete | 15–30 | 🔄 In progress (10/16 done) |
+| 2 | War system complete | 15–30 | 🔄 In progress (11/16 done) |
 | 3 | Diplomacy complete | 31–43 | ⬜ Not started |
 | 4 | Intrigue complete | 44–57 | ⬜ Not started |
 | 5 | AI, UI, victory, polish | 58–72 | ⬜ Not started |

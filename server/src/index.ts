@@ -7,6 +7,7 @@ import provinceRouter from './routes/province.js';
 import combatRouter from './routes/combat.js';
 import diplomacyRouter from './routes/diplomacy.js';
 import intrigueRouter from './routes/intrigue.js';
+import recruitRouter from './routes/recruitment.js';
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -20,6 +21,7 @@ app.use('/api/province', provinceRouter);
 app.use('/api/combat', combatRouter);
 app.use('/api/diplomacy', diplomacyRouter);
 app.use('/api/intrigue', intrigueRouter);
+app.use('/api/recruit', recruitRouter);
 
 app.get('/api/health', (_req, res) => {
   const db = getDb();
