@@ -174,6 +174,8 @@ export default function App() {
           <ProvinceInfoPanel
             province={selectedProvince}
             faction={selectedFaction}
+            playerFaction={playerFaction}
+            relations={gameState.diplomaticRelations}
             onClose={() => setSelectedId(null)}
           />
         ) : (
