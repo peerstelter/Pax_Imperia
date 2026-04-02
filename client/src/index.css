@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-parchment: #f5e6c8;
+  --color-ink: #1a0a00;
+  --color-gold: #c9a84c;
+}
+
+body {
+  @apply bg-stone-900 text-stone-100 font-serif;
+  margin: 0;
+}
