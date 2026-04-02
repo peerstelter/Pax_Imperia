@@ -18,8 +18,8 @@ A strategy game in which the objective is to expand your empire through three pa
 
 ## Phase 1 — Foundation, Map & Infrastructure (Tasks 1–14)
 
-- [ ] **Task 1** — Monorepo structure: `/client` (React+Vite), `/server` (Express), `/shared` (types/constants), `docker-compose.yml`
-- [ ] **Task 2** — Vite PWA setup with Workbox, Tailwind, ESLint/Prettier
+- [x] **Task 1** — Monorepo structure: `/client` (React+Vite), `/server` (Express), `/shared` (types/constants), `docker-compose.yml`
+- [x] **Task 2** — Vite PWA setup with Workbox, Tailwind, ESLint/Prettier
 - [ ] **Task 3** — SQLite schema: tables for `games`, `factions`, `provinces`, `armies`, `units`, `diplomatic_relations`, `intrigue_actions`, `turn_log`
 - [ ] **Task 4** — Express REST API skeleton: `/api/game`, `/api/faction`, `/api/province`, `/api/combat`, `/api/diplomacy`, `/api/intrigue`
 - [ ] **Task 5** — Map system: hexagonal or rectangular province grid, biome types (Steppe, Desert, Isles, Tundra, Default)
@@ -180,7 +180,7 @@ You secretly control most kingdoms through puppets (75%+ shadow influence trigge
 
 | Phase | Focus | Tasks | Status |
 |---|---|---|---|
-| 1 | Foundation, map, infrastructure | 1–14 | ⬜ Not started |
+| 1 | Foundation, map, infrastructure | 1–14 | 🔄 In progress (2/14 done) |
 | 2 | War system complete | 15–30 | ⬜ Not started |
 | 3 | Diplomacy complete | 31–43 | ⬜ Not started |
 | 4 | Intrigue complete | 44–57 | ⬜ Not started |
