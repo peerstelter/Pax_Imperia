@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { getDb } from '../db/database.js';
 import type { IntrigueActionType } from '@pax-imperia/shared';
-import { buildSpyNetwork, getNetworkStrength, listNetworks } from '../engine/spyNetwork.js';
+import { buildSpyNetwork, getNetworkStrength, listNetworks, counterIntelligence } from '../engine/spyNetwork.js';
 import { queueIntrigueAction } from '../engine/intrigueEngine.js';
 import { supportPretender } from '../engine/pretenderEngine.js';
 
@@ -110,6 +110,19 @@ router.post('/pretender', (req: Request, res: Response) => {
   const db = getDb();
   const result = supportPretender(db, gameId, backerId, targetFactionId);
   return result.ok ? res.status(201).json(result) : res.status(400).json(result);
+});
+
+// POST /api/intrigue/counter-intel — sweep for enemy networks; optionally turn double agent
+router.post('/counter-intel', (req: Request, res: Response) => {
+  const { gameId, factionId, provinceId, doubleAgent } = req.body as {
+    gameId: string; factionId: string; provinceId: string; doubleAgent?: boolean;
+  };
+  if (!gameId || !factionId || !provinceId)
+    return res.status(400).json({ error: 'gameId, factionId, provinceId required' });
+
+  const db = getDb();
+  const result = counterIntelligence(db, gameId, factionId, provinceId, doubleAgent ?? false);
+  return result.ok ? res.status(200).json(result) : res.status(400).json(result);
 });
 
 // POST /api/intrigue/network/build — place an agent in a province

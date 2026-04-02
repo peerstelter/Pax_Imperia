@@ -121,6 +121,82 @@ export function tickNetworkDecay(db: Database.Database, gameId: string): void {
   ).run(gameId);
 }
 
+// ── Counter-intelligence ──────────────────────────────────────────────────────
+
+/**
+ * Run a counter-intelligence sweep in a province owned by defenderFactionId.
+ * Costs 30 gold. Detects and destroys one enemy spy network in the province if found.
+ *
+ * Double-agent option: if doubleAgent=true, instead of destroying the enemy network
+ * the defending faction drains 20 shadow influence from the attacker.
+ */
+export function counterIntelligence(
+  db: Database.Database,
+  gameId: string,
+  defenderFactionId: string,
+  provinceId: string,
+  doubleAgent: boolean = false,
+): { ok: boolean; discovered?: string; reason?: string } {
+  const COUNTER_INTEL_COST = 30;
+
+  const faction = db
+    .prepare('SELECT gold FROM factions WHERE game_id = ? AND id = ?')
+    .get(gameId, defenderFactionId) as { gold: number } | undefined;
+  if (!faction) return { ok: false, reason: 'Faction not found' };
+  if (faction.gold < COUNTER_INTEL_COST) return { ok: false, reason: `Need ${COUNTER_INTEL_COST} gold` };
+
+  db.prepare('UPDATE factions SET gold = gold - ? WHERE game_id = ? AND id = ?')
+    .run(COUNTER_INTEL_COST, gameId, defenderFactionId);
+
+  // Find an enemy network in this province
+  const enemy = db
+    .prepare(
+      `SELECT faction_id FROM spy_networks
+       WHERE game_id = ? AND province_id = ? AND faction_id != ?
+       ORDER BY RANDOM() LIMIT 1`,
+    )
+    .get(gameId, provinceId, defenderFactionId) as { faction_id: string } | undefined;
+
+  if (!enemy) return { ok: true, discovered: undefined };
+
+  const game = db.prepare('SELECT turn FROM games WHERE id = ?').get(gameId) as { turn: number };
+
+  if (doubleAgent) {
+    // Drain shadow influence instead of destroying the network
+    db.prepare(
+      `UPDATE shadow_influence SET influence = MAX(0, influence - 20)
+       WHERE game_id = ? AND source_faction = ? AND target_faction = ?`,
+    ).run(gameId, enemy.faction_id, defenderFactionId);
+
+    db.prepare(
+      `INSERT INTO turn_log (id, game_id, turn, type, description, faction_id, province_id, data)
+       VALUES (?, ?, ?, 'double_agent', ?, ?, ?, ?)`,
+    ).run(
+      randomUUID(), gameId, game.turn,
+      `Double agent: ${defenderFactionId} turned ${enemy.faction_id}'s agent in ${provinceId} (-20 shadow influence)`,
+      defenderFactionId, provinceId,
+      JSON.stringify({ enemyFactionId: enemy.faction_id }),
+    );
+  } else {
+    // Destroy the enemy network
+    db.prepare(
+      'DELETE FROM spy_networks WHERE game_id = ? AND faction_id = ? AND province_id = ?',
+    ).run(gameId, enemy.faction_id, provinceId);
+
+    db.prepare(
+      `INSERT INTO turn_log (id, game_id, turn, type, description, faction_id, province_id, data)
+       VALUES (?, ?, ?, 'network_exposed', ?, ?, ?, ?)`,
+    ).run(
+      randomUUID(), gameId, game.turn,
+      `Counter-intel: ${defenderFactionId} destroyed ${enemy.faction_id}'s network in ${provinceId}`,
+      defenderFactionId, provinceId,
+      JSON.stringify({ enemyFactionId: enemy.faction_id }),
+    );
+  }
+
+  return { ok: true, discovered: enemy.faction_id };
+}
+
 // ── All networks for a faction ────────────────────────────────────────────────
 
 export function listNetworks(
