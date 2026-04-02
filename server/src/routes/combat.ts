@@ -3,44 +3,59 @@ import { randomUUID } from 'crypto';
 import { getDb } from '../db/database.js';
 import { resolveCombat } from '../engine/combatResolver.js';
 import { resolveSiegeTurn, initSiege } from '../engine/siegeEngine.js';
+import { declareWar, makePeace, formAlliance, breakAlliance } from '../engine/warDiplomacy.js';
 import { buildDefaultFormation } from '@pax-imperia/shared';
 import type { Unit, Commander } from '@pax-imperia/shared';
 import type { SiegeWeaponType } from '@pax-imperia/shared';
 
 const router = Router();
 
-// POST /api/combat/declare — declare war
+// POST /api/combat/declare — declare war with call-to-arms
 router.post('/declare', (req: Request, res: Response) => {
   const { gameId, attackerId, defenderId, casusBelli } = req.body as {
-    gameId: string;
-    attackerId: string;
-    defenderId: string;
-    casusBelli: 'claim' | 'revenge' | 'expansion';
+    gameId: string; attackerId: string; defenderId: string; casusBelli: 'claim' | 'revenge' | 'expansion';
   };
-  if (!gameId || !attackerId || !defenderId || !casusBelli) {
+  if (!gameId || !attackerId || !defenderId || !casusBelli)
     return res.status(400).json({ error: 'gameId, attackerId, defenderId, casusBelli required' });
-  }
 
   const db = getDb();
-  const game = db.prepare('SELECT turn FROM games WHERE id = ?').get(gameId) as { turn: number } | undefined;
-  if (!game) return res.status(404).json({ error: 'Game not found' });
+  if (!db.prepare('SELECT id FROM games WHERE id = ?').get(gameId))
+    return res.status(404).json({ error: 'Game not found' });
 
-  db.prepare(
-    `INSERT INTO turn_log (id, game_id, turn, type, description, faction_id, data)
-     VALUES (?, ?, ?, 'war_declaration', ?, ?, ?)`,
-  ).run(
-    randomUUID(), gameId, game.turn,
-    `${attackerId} declared war on ${defenderId} (${casusBelli})`,
-    attackerId,
-    JSON.stringify({ defenderId, casusBelli }),
-  );
+  const result = declareWar(db, gameId, attackerId, defenderId, casusBelli);
+  return res.status(201).json(result);
+});
 
-  db.prepare(
-    `UPDATE diplomatic_relations SET opinion = MAX(-100, opinion - 30)
-     WHERE game_id = ? AND ((faction_a = ? AND faction_b = ?) OR (faction_a = ? AND faction_b = ?))`,
-  ).run(gameId, attackerId, defenderId, defenderId, attackerId);
+// POST /api/combat/peace — negotiate a peace settlement
+router.post('/peace', (req: Request, res: Response) => {
+  const { gameId, winnerId, loserId, term } = req.body as {
+    gameId: string; winnerId: string; loserId: string; term: 'annex' | 'tribute' | 'vassalize' | 'white_peace';
+  };
+  if (!gameId || !winnerId || !loserId || !term)
+    return res.status(400).json({ error: 'gameId, winnerId, loserId, term required' });
 
-  return res.status(201).json({ message: 'War declared' });
+  const db = getDb();
+  makePeace(db, gameId, winnerId, loserId, term);
+  return res.status(200).json({ message: `Peace (${term}) concluded` });
+});
+
+// POST /api/combat/alliance — form or break an alliance
+router.post('/alliance', (req: Request, res: Response) => {
+  const { gameId, factionA, factionB, action, type } = req.body as {
+    gameId: string; factionA: string; factionB: string;
+    action: 'form' | 'break'; type?: 'defensive' | 'offensive';
+  };
+  if (!gameId || !factionA || !factionB || !action)
+    return res.status(400).json({ error: 'gameId, factionA, factionB, action required' });
+
+  const db = getDb();
+  if (action === 'form') {
+    const result = formAlliance(db, gameId, factionA, factionB, type ?? 'defensive');
+    return result.ok ? res.status(200).json(result) : res.status(400).json(result);
+  } else {
+    breakAlliance(db, gameId, factionA, factionB);
+    return res.status(200).json({ message: 'Alliance dissolved' });
+  }
 });
 
 // POST /api/combat/resolve — resolve a field battle between two armies
