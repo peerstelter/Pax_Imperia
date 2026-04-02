@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { Province, Faction, DiplomaticRelation, DiplomacyType } from '@pax-imperia/shared';
-import type { GameState } from '@pax-imperia/shared';
+import type { DiplomacyType, GameState } from '@pax-imperia/shared';
 import ProvinceMap from './components/map/ProvinceMap.js';
 import ProvinceInfoPanel from './components/map/ProvinceInfoPanel.js';
 import Minimap from './components/map/Minimap.js';

@@ -1,6 +1,7 @@
 import type Database from 'better-sqlite3';
 import { randomUUID } from 'crypto';
-import { getTroopStats, recruitableTroops } from '@pax-imperia/shared';
+import { getTroopStats } from '@pax-imperia/shared';
+import { recruitableTroops } from './unitFactory.js';
 import { createUnit } from './unitFactory.js';
 import type { TroopType, Biome } from '@pax-imperia/shared';
 

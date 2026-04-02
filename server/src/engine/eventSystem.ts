@@ -14,7 +14,7 @@ const RANDOM_EVENTS: RandomEvent[] = [
   {
     type: 'plague',
     description: 'A deadly plague sweeps through the land',
-    probability: 0.04,
+    probability: 0.025,   // ~once per 40 turns per faction (balanced down from 0.04)
     apply(db, gameId, factionId, turn) {
       // Reduce all armies' unit counts by 15%
       const armies = db
@@ -33,7 +33,7 @@ const RANDOM_EVENTS: RandomEvent[] = [
   {
     type: 'famine',
     description: 'Crops fail; food stores are depleted',
-    probability: 0.05,
+    probability: 0.04,   // ~once per 25 turns per faction
     apply(db, gameId, factionId, turn) {
       db.prepare('UPDATE factions SET food = MAX(0, food - 50) WHERE game_id = ? AND id = ?')
         .run(gameId, factionId);

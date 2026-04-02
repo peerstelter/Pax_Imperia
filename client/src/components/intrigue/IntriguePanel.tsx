@@ -25,22 +25,18 @@ interface ShadowInfo {
 }
 
 interface IntriguePanelProps {
-  playerFaction: Faction;
   factions: Faction[];
   networks: NetworkInfo[];
   shadow: ShadowInfo[];
   onQueueAction: (type: IntrigueActionType, targetFactionId: string, targetProvinceId?: string) => void;
-  onBuildNetwork: (provinceId: string) => void;
   onClose: () => void;
 }
 
 export default function IntriguePanel({
-  playerFaction,
   factions,
   networks,
   shadow,
   onQueueAction,
-  onBuildNetwork,
   onClose,
 }: IntriguePanelProps) {
   const [selectedAction, setSelectedAction] = useState<IntrigueActionType>('spy');

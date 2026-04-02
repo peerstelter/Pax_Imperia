@@ -172,7 +172,7 @@ You secretly control most kingdoms through puppets (75%+ shadow influence trigge
 - [x] **Task 69** — Intrigue UI: agent map, action selection, risk assessment, network strength visualization
 - [x] **Task 70** — Tutorial system: guided first game with tooltips for all three paths
 - [x] **Task 71** — Responsive mobile layout: touch controls for map, bottom-sheet panels
-- [ ] **Task 72** — End-to-end test run + balancing pass: counter bonuses, opinion values, AI aggressiveness, turn time
+- [x] **Task 72** — End-to-end test run + balancing pass: counter bonuses, opinion values, AI aggressiveness, turn time
 
 ---
 
@@ -184,7 +184,7 @@ You secretly control most kingdoms through puppets (75%+ shadow influence trigge
 | 2 | War system complete | 15–30 | ✅ Complete |
 | 3 | Diplomacy complete | 31–43 | ✅ Complete |
 | 4 | Intrigue complete | 44–57 | ✅ Complete |
-| 5 | AI, UI, victory, polish | 58–72 | 🔄 In progress (14/15 done) |
+| 5 | AI, UI, victory, polish | 58–72 | ✅ Complete |
 
 **Total: 72 tasks across 5 phases**
 

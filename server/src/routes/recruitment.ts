@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { getDb } from '../db/database.js';
 import { recruit } from '../engine/recruitment.js';
 import { getWarExhaustion, recruitmentRateMod } from '../engine/warExhaustion.js';
-import { recruitableTroops } from '@pax-imperia/shared';
+import { recruitableTroops } from '../engine/unitFactory.js';
 import type { TroopType, Biome } from '@pax-imperia/shared';
 
 const router = Router();
