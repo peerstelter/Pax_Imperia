@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { randomUUID } from 'crypto';
 import { getDb } from '../db/database.js';
+import { seedGame, FACTION_DEFS } from '../db/seeder.js';
 
 const router = Router();
 
@@ -18,7 +19,14 @@ router.get('/:id', (req: Request, res: Response) => {
   return res.json({ game, factions, provinces, armies, relations });
 });
 
-// POST /api/game — create a new game (seeder wires in Task 7)
+// GET /api/game/factions — list available starting factions
+router.get('/factions', (_req: Request, res: Response) => {
+  return res.json(FACTION_DEFS.map(({ id, name, color, personality, isPlayer }) => ({
+    id, name, color, personality, isPlayer,
+  })));
+});
+
+// POST /api/game — create and seed a new game
 router.post('/', (req: Request, res: Response) => {
   const { playerFactionId } = req.body as { playerFactionId?: string };
   if (!playerFactionId) return res.status(400).json({ error: 'playerFactionId required' });
@@ -29,6 +37,13 @@ router.post('/', (req: Request, res: Response) => {
   db.prepare(
     'INSERT INTO games (id, player_faction, turn) VALUES (?, ?, 1)',
   ).run(id, playerFactionId);
+
+  try {
+    seedGame(db, id, playerFactionId);
+  } catch (err) {
+    db.prepare('DELETE FROM games WHERE id = ?').run(id);
+    return res.status(400).json({ error: (err as Error).message });
+  }
 
   return res.status(201).json({ id });
 });
