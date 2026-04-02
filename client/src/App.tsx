@@ -169,7 +169,7 @@ export default function App() {
       )}
 
       {/* Main content */}
-      <main className="flex flex-1 gap-4 p-4 overflow-hidden relative">
+      <main className="flex flex-1 md:flex-row flex-col gap-4 p-2 md:p-4 overflow-hidden relative">
         <ProvinceMap
           provinces={gameState.provinces}
           factions={gameState.factions}
@@ -178,7 +178,8 @@ export default function App() {
           cellSize={90}
         />
 
-        <div className="absolute bottom-6 left-6 z-10">
+        {/* Minimap — hidden on small screens */}
+        <div className="hidden md:block absolute bottom-6 left-6 z-10">
           <Minimap
             provinces={gameState.provinces}
             factions={gameState.factions}
@@ -187,16 +188,35 @@ export default function App() {
           />
         </div>
 
+        {/* Desktop: side panel | Mobile: bottom sheet */}
         {selectedProvince && selectedFaction !== undefined ? (
-          <ProvinceInfoPanel
-            province={selectedProvince}
-            faction={selectedFaction}
-            playerFaction={playerFaction}
-            relations={gameState.diplomaticRelations}
-            onClose={() => setSelectedId(null)}
-          />
+          <>
+            {/* Desktop side panel */}
+            <div className="hidden md:block">
+              <ProvinceInfoPanel
+                province={selectedProvince}
+                faction={selectedFaction}
+                playerFaction={playerFaction}
+                relations={gameState.diplomaticRelations}
+                onClose={() => setSelectedId(null)}
+              />
+            </div>
+            {/* Mobile bottom sheet */}
+            <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-stone-900 border-t border-stone-600 rounded-t-xl max-h-[60vh] overflow-y-auto">
+              <div className="flex justify-center py-1">
+                <div className="w-10 h-1 bg-stone-600 rounded-full" />
+              </div>
+              <ProvinceInfoPanel
+                province={selectedProvince}
+                faction={selectedFaction}
+                playerFaction={playerFaction}
+                relations={gameState.diplomaticRelations}
+                onClose={() => setSelectedId(null)}
+              />
+            </div>
+          </>
         ) : (
-          <div className="w-72 flex items-center justify-center text-stone-600 text-sm italic">
+          <div className="hidden md:flex w-72 items-center justify-center text-stone-600 text-sm italic">
             Click a province to inspect it
           </div>
         )}
