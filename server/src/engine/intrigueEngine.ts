@@ -126,9 +126,22 @@ function applyIntrigueSuccess(
 
     case 'propaganda':
       if (action.target_province_id) {
+        // Reduce garrison and mark province as unrest (halves next turn's garrison recovery)
         db.prepare(`UPDATE provinces SET garrison = MAX(0, garrison - 100) WHERE game_id = ? AND id = ?`)
           .run(gameId, action.target_province_id);
-        events.push(`Propaganda success: garrison -100 in ${action.target_province_id}`);
+        // Log unrest event so UI and turn engine can display/act on it
+        {
+          const game = db.prepare('SELECT turn FROM games WHERE id = ?').get(gameId) as { turn: number };
+          db.prepare(
+            `INSERT INTO turn_log (id, game_id, turn, type, description, faction_id, province_id, data)
+             VALUES (?, ?, ?, 'province_unrest', ?, ?, ?, '{}')`,
+          ).run(
+            randomUUID(), gameId, game.turn,
+            `Propaganda caused unrest in ${action.target_province_id}`,
+            action.source_faction_id, action.target_province_id,
+          );
+        }
+        events.push(`Propaganda success: garrison -100 and unrest in ${action.target_province_id}`);
       }
       break;
 
@@ -157,8 +170,38 @@ function applyIntrigueSuccess(
       break;
 
     case 'bribe':
+      // Turn a random enemy commander (they defect — removed from enemy army)
+      {
+        const commander = db
+          .prepare(`SELECT id FROM commanders WHERE game_id = ? AND faction_id = ? AND is_alive = 1 ORDER BY RANDOM() LIMIT 1`)
+          .get(gameId, action.target_faction_id) as { id: string } | undefined;
+        if (commander) {
+          db.prepare('UPDATE commanders SET faction_id = ? WHERE game_id = ? AND id = ?')
+            .run(action.source_faction_id, gameId, commander.id);
+          events.push(`Bribe success: commander ${commander.id} defected to ${action.source_faction_id}`);
+        }
+        gainShadowInfluence(db, gameId, action.source_faction_id, action.target_faction_id, 10, events);
+      }
+      break;
+
     case 'blackmail':
-      gainShadowInfluence(db, gameId, action.source_faction_id, action.target_faction_id, 10, events);
+      // Force a tribute payment: drain 100 gold from target to source
+      {
+        const target = db
+          .prepare('SELECT gold FROM factions WHERE game_id = ? AND id = ?')
+          .get(gameId, action.target_faction_id) as { gold: number } | undefined;
+        const tribute = Math.min(100, target?.gold ?? 0);
+        if (tribute > 0) {
+          db.prepare('UPDATE factions SET gold = gold - ? WHERE game_id = ? AND id = ?')
+            .run(tribute, gameId, action.target_faction_id);
+          db.prepare('UPDATE factions SET gold = gold + ? WHERE game_id = ? AND id = ?')
+            .run(tribute, gameId, action.source_faction_id);
+          events.push(`Blackmail success: ${action.target_faction_id} paid ${tribute}g tribute to ${action.source_faction_id}`);
+        }
+        // Lasting opinion penalty (target resents blackmailer)
+        adjustOpinion(db, gameId, action.source_faction_id, action.target_faction_id, -20);
+        gainShadowInfluence(db, gameId, action.source_faction_id, action.target_faction_id, 10, events);
+      }
       break;
   }
 }

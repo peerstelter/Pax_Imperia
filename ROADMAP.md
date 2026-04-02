@@ -142,11 +142,11 @@ You secretly control most kingdoms through puppets (75%+ shadow influence trigge
 - [x] **Task 44** — Spy network: agent slots per province, discovery probability, network building costs time
 - [x] **Task 45** — Intelligence actions framework: action → success probability → consequence (success/discovery/failure)
 - [x] **Task 46** — Espionage: reveal enemy troop strength, resources, active intrigue operations
-- [ ] **Task 47** — Assassination: target enemy rulers or generals, high discovery risk, opinion penalty if traced
-- [ ] **Task 48** — Sabotage: weaken troops, destroy supply depots, damage fortress walls
-- [ ] **Task 49** — Bribery: turn enemy generals or governors to own side
-- [ ] **Task 50** — Propaganda: trigger rebellion in province, province enters "unrest" status temporarily
-- [ ] **Task 51** — Blackmail: force treaty or tribute, causes lasting opinion penalty
+- [x] **Task 47** — Assassination: target enemy rulers or generals, high discovery risk, opinion penalty if traced
+- [x] **Task 48** — Sabotage: weaken troops, destroy supply depots, damage fortress walls
+- [x] **Task 49** — Bribery: turn enemy generals or governors to own side
+- [x] **Task 50** — Propaganda: trigger rebellion in province, province enters "unrest" status temporarily
+- [x] **Task 51** — Blackmail: force treaty or tribute, causes lasting opinion penalty
 - [ ] **Task 52** — Shadow influence bar: covert influence meter in enemy factions, grows through multiple intrigue actions
 - [ ] **Task 53** — Puppeteer mechanic: at 75%+ shadow influence → faction follows player directives in diplomacy
 - [ ] **Task 54** — Pretender support: trigger civil war in enemy kingdom, back own candidate
@@ -183,7 +183,7 @@ You secretly control most kingdoms through puppets (75%+ shadow influence trigge
 | 1 | Foundation, map, infrastructure | 1–14 | ✅ Complete |
 | 2 | War system complete | 15–30 | ✅ Complete |
 | 3 | Diplomacy complete | 31–43 | ✅ Complete |
-| 4 | Intrigue complete | 44–57 | 🔄 In progress (3/14 done) |
+| 4 | Intrigue complete | 44–57 | 🔄 In progress (8/14 done) |
 | 5 | AI, UI, victory, polish | 58–72 | ⬜ Not started |
 
 **Total: 72 tasks across 5 phases**
