@@ -9,6 +9,7 @@ import { tradeGoldTick, vassalTributeTick } from './diplomacyEngine.js';
 import { checkDiplomaticVictory } from './electionEngine.js';
 import { runAiDecisions } from './aiDecisionEngine.js';
 import { tickNetworkDecay } from './spyNetwork.js';
+import { resolveAction } from './intrigueEngine.js';
 import { INTRIGUE_PUPPET_THRESHOLD } from '@pax-imperia/shared';
 
 interface GameRow { id: string; turn: number; player_faction: string; winner: string | null }
@@ -109,85 +110,8 @@ function resolveIntrigueActions(
     .all(gameId) as IntrigueRow[];
 
   for (const action of actions) {
-    const roll = Math.random();
-    let status: 'success' | 'failure' | 'discovered';
-
-    if (roll <= action.success_chance * 0.1) {
-      status = 'discovered';
-    } else if (roll <= action.success_chance) {
-      status = 'success';
-    } else {
-      status = 'failure';
-    }
-
-    db.prepare('UPDATE intrigue_actions SET status = ? WHERE id = ? AND game_id = ?')
-      .run(status, action.id, gameId);
-
-    if (status === 'success') {
-      applyIntrigueSuccess(db, gameId, action, events);
-    } else if (status === 'discovered') {
-      // Opinion penalty when discovered
-      const [a, b] = [action.source_faction_id, action.target_faction_id].sort();
-      db.prepare(
-        `UPDATE diplomatic_relations SET opinion = MAX(-100, opinion - 15)
-         WHERE game_id = ? AND faction_a = ? AND faction_b = ?`,
-      ).run(gameId, a, b);
-      events.push(`Intrigue discovered: ${action.source_faction_id} lost 15 opinion with ${action.target_faction_id}`);
-    }
-
-    db.prepare(
-      `INSERT INTO turn_log (id, game_id, turn, type, description, faction_id, data)
-       VALUES (?, ?, ?, 'intrigue_resolved', ?, ?, ?)`,
-    ).run(
-      randomUUID(), gameId, turn,
-      `Intrigue ${action.type}: ${status}`,
-      action.source_faction_id,
-      JSON.stringify({ actionId: action.id, status }),
-    );
-  }
-}
-
-function applyIntrigueSuccess(
-  db: Database.Database,
-  gameId: string,
-  action: IntrigueRow,
-  events: string[],
-): void {
-  switch (action.type) {
-    case 'spy':
-      // Reveal target provinces adjacent to target faction's territory
-      db.prepare(`UPDATE provinces SET is_revealed = 1 WHERE game_id = ? AND owner_id = ?`)
-        .run(gameId, action.target_faction_id);
-      events.push(`Spy success: ${action.source_faction_id} revealed ${action.target_faction_id}'s provinces`);
-      break;
-
-    case 'propaganda':
-      // Reduce garrison in target province
-      if (action.target_province_id) {
-        db.prepare(`UPDATE provinces SET garrison = MAX(0, garrison - 100) WHERE game_id = ? AND id = ?`)
-          .run(gameId, action.target_province_id);
-        events.push(`Propaganda success: garrison reduced in ${action.target_province_id}`);
-      }
-      break;
-
-    case 'sabotage':
-      if (action.target_province_id) {
-        db.prepare(`UPDATE provinces SET fort_level = MAX(0, fort_level - 1) WHERE game_id = ? AND id = ?`)
-          .run(gameId, action.target_province_id);
-        events.push(`Sabotage success: fort level reduced in ${action.target_province_id}`);
-      }
-      break;
-
-    case 'bribe':
-    case 'blackmail':
-    case 'assassinate':
-      // Shadow influence gain for covert pressure actions
-      db.prepare(
-        `UPDATE shadow_influence SET influence = MIN(100, influence + 10)
-         WHERE game_id = ? AND source_faction = ? AND target_faction = ?`,
-      ).run(gameId, action.source_faction_id, action.target_faction_id);
-      events.push(`${action.type} success: shadow influence +10 on ${action.target_faction_id}`);
-      break;
+    const { events: actionEvents } = resolveAction(db, gameId, action, turn);
+    events.push(...actionEvents);
   }
 }
 
