@@ -2,8 +2,10 @@ import { Router, Request, Response } from 'express';
 import { randomUUID } from 'crypto';
 import { getDb } from '../db/database.js';
 import { resolveCombat } from '../engine/combatResolver.js';
+import { resolveSiegeTurn, initSiege } from '../engine/siegeEngine.js';
 import { buildDefaultFormation } from '@pax-imperia/shared';
 import type { Unit, Commander } from '@pax-imperia/shared';
+import type { SiegeWeaponType } from '@pax-imperia/shared';
 
 const router = Router();
 
@@ -114,6 +116,56 @@ router.post('/resolve', (req: Request, res: Response) => {
     atkRow.faction_id,
     JSON.stringify({ winner: result.winner, attackerCasualties: result.totalAttackerCasualties, defenderCasualties: result.totalDefenderCasualties }),
   );
+
+  return res.json(result);
+});
+
+// POST /api/combat/siege — resolve one turn of a siege
+router.post('/siege', (req: Request, res: Response) => {
+  const { gameId, attackerArmyId, defenderProvinceId, weapons, attemptAssault, defenderSortie } = req.body as {
+    gameId: string;
+    attackerArmyId: string;
+    defenderProvinceId: string;
+    weapons: SiegeWeaponType[];
+    attemptAssault: boolean;
+    defenderSortie: boolean;
+  };
+  if (!gameId || !attackerArmyId || !defenderProvinceId) {
+    return res.status(400).json({ error: 'gameId, attackerArmyId, defenderProvinceId required' });
+  }
+
+  const db = getDb();
+
+  const province = db.prepare('SELECT fort_level, garrison, owner_id FROM provinces WHERE game_id = ? AND id = ?')
+    .get(gameId, defenderProvinceId) as { fort_level: number; garrison: number; owner_id: string } | undefined;
+  if (!province) return res.status(404).json({ error: 'Province not found' });
+
+  const atkRow = db.prepare('SELECT * FROM armies WHERE game_id = ? AND id = ?').get(gameId, attackerArmyId) as { id: string; faction_id: string; province_id: string; commander_id: string | null; formation: string } | undefined;
+  if (!atkRow) return res.status(404).json({ error: 'Attacking army not found' });
+
+  // Build a synthetic defender army from garrison
+  const defArmy = {
+    id: 'garrison',
+    factionId: province.owner_id,
+    provinceId: defenderProvinceId,
+    units: [{ type: 'heavy_infantry' as const, count: province.garrison, morale: 80, attack: 14, defense: 18, speed: 5 }],
+    formation: buildDefaultFormation([{ type: 'heavy_infantry', count: province.garrison, morale: 80, attack: 14, defense: 18, speed: 5 }]),
+  };
+
+  const atkUnits: Unit[] = (db.prepare('SELECT * FROM units WHERE game_id = ? AND army_id = ?').all(gameId, attackerArmyId) as {
+    type: Unit['type']; variant: string | null; count: number; morale: number; attack: number; defense: number; speed: number
+  }[]).map((r) => ({ type: r.type, variant: r.variant ?? undefined, count: r.count, morale: r.morale, attack: r.attack, defense: r.defense, speed: r.speed }));
+
+  const atkFormation = atkRow.formation !== '{}' ? JSON.parse(atkRow.formation) : buildDefaultFormation(atkUnits);
+  const atkArmy = { id: atkRow.id, factionId: atkRow.faction_id, provinceId: atkRow.province_id, units: atkUnits, formation: atkFormation };
+
+  const siegeState = initSiege(province.fort_level);
+  const result = resolveSiegeTurn(siegeState, atkArmy, defArmy, weapons ?? [], { attemptAssault, defenderSortie }, undefined, undefined);
+
+  // If attacker won the assault, reduce garrison and optionally fort level
+  if (result.assaultResult?.winner === 'attacker') {
+    db.prepare('UPDATE provinces SET garrison = 0 WHERE game_id = ? AND id = ?').run(gameId, defenderProvinceId);
+  }
 
   return res.json(result);
 });
