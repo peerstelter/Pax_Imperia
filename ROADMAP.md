@@ -152,7 +152,7 @@ You secretly control most kingdoms through puppets (75%+ shadow influence trigge
 - [x] **Task 54** — Pretender support: trigger civil war in enemy kingdom, back own candidate
 - [x] **Task 55** — Intrigue victory condition: player controls X factions covertly through puppets
 - [x] **Task 56** — Counter-intelligence: own agents for defense, expose enemy networks, double agent option
-- [ ] **Task 57** — Intrigue log: chronicle of all revealed and suspected actions, with evidence chain system
+- [x] **Task 57** — Intrigue log: chronicle of all revealed and suspected actions, with evidence chain system
 
 ---
 
@@ -183,7 +183,7 @@ You secretly control most kingdoms through puppets (75%+ shadow influence trigge
 | 1 | Foundation, map, infrastructure | 1–14 | ✅ Complete |
 | 2 | War system complete | 15–30 | ✅ Complete |
 | 3 | Diplomacy complete | 31–43 | ✅ Complete |
-| 4 | Intrigue complete | 44–57 | 🔄 In progress (13/14 done) |
+| 4 | Intrigue complete | 44–57 | ✅ Complete |
 | 5 | AI, UI, victory, polish | 58–72 | ⬜ Not started |
 
 **Total: 72 tasks across 5 phases**

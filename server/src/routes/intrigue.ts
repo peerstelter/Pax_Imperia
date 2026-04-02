@@ -23,6 +23,45 @@ router.get('/shadow/:gameId/:sourceFactionId', (req: Request, res: Response) => 
   return res.json(result);
 });
 
+// GET /api/intrigue/log/:gameId — intrigue chronicle with evidence chain
+// Returns all non-pending intrigue actions enriched with related turn_log evidence.
+router.get('/log/:gameId', (req: Request, res: Response) => {
+  const { gameId } = req.params;
+  const db = getDb();
+
+  // All resolved intrigue actions
+  const actions = db
+    .prepare(
+      `SELECT id, type, source_faction_id, target_faction_id, target_province_id,
+              success_chance, status, turn
+       FROM intrigue_actions
+       WHERE game_id = ? AND status != 'pending'
+       ORDER BY turn DESC`,
+    )
+    .all(gameId) as {
+      id: string; type: string; source_faction_id: string; target_faction_id: string;
+      target_province_id: string | null; success_chance: number; status: string; turn: number;
+    }[];
+
+  // Attach related turn_log entries as evidence chain
+  const logStmt = db.prepare(
+    `SELECT id, type, description, turn, data
+     FROM turn_log
+     WHERE game_id = ? AND (type = 'intrigue_resolved' OR type = 'network_exposed'
+       OR type = 'double_agent' OR type = 'province_unrest' OR type = 'civil_war')
+       AND json_extract(data, '$.actionId') = ?`,
+  );
+
+  const chronicle = actions.map((action) => {
+    const evidence = logStmt.all(gameId, action.id) as {
+      id: string; type: string; description: string; turn: number; data: string;
+    }[];
+    return { ...action, evidence };
+  });
+
+  return res.json(chronicle);
+});
+
 // GET /api/intrigue/:gameId — all intrigue actions for a game
 router.get('/:gameId', (req: Request, res: Response) => {
   const db = getDb();
