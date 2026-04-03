@@ -56,13 +56,13 @@ export default function App() {
     setStatusMsg(null);
     try {
       const res = await fetch(`/api/game/${gameId}/turn`, { method: 'PUT' });
-      const data = await res.json() as { newTurn: number; events: string[]; winner?: string };
+      const data = await res.json() as { newTurn: number; events: string[]; winner?: string; winnerName?: string };
+      await loadState(gameId);
       if (data.winner) {
-        setStatusMsg(`Victory! ${data.winner} wins the game!`);
+        setStatusMsg(`Victory! ${data.winnerName ?? data.winner} wins the game!`);
       } else if (data.events.length > 0) {
         setStatusMsg(data.events.slice(0, 3).join(' · '));
       }
-      await loadState(gameId);
     } catch (e) {
       setStatusMsg('Failed to advance turn');
     } finally {
@@ -245,7 +245,7 @@ export default function App() {
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
           <div className="bg-stone-900 border border-amber-600 rounded p-8 text-center max-w-sm">
             <h2 className="text-3xl font-bold text-amber-400 mb-2">Victory!</h2>
-            <p className="text-stone-300 mb-4">{gameState.winner} has triumphed.</p>
+            <p className="text-stone-300 mb-4">{gameState.factions.find((f) => f.id === gameState.winner)?.name ?? gameState.winner} has triumphed.</p>
             <button
               onClick={() => setScreen('menu')}
               className="px-6 py-2 bg-amber-700 hover:bg-amber-600 border border-amber-500 rounded font-bold"

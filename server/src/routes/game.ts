@@ -87,7 +87,13 @@ router.put('/:id/turn', (req: Request, res: Response) => {
   const db = getDb();
   try {
     const result = advanceTurn(db, req.params.id);
-    return res.json(result);
+    let winnerName: string | undefined;
+    if (result.winner) {
+      const row = db.prepare('SELECT name FROM factions WHERE game_id = ? AND id = ?')
+        .get(req.params.id, result.winner) as { name: string } | undefined;
+      winnerName = row?.name ?? result.winner;
+    }
+    return res.json({ ...result, winnerName });
   } catch (err) {
     return res.status(400).json({ error: (err as Error).message });
   }
