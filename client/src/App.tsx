@@ -46,6 +46,7 @@ export default function App() {
     setGameId(id);
     setPlayerFactionId(factionId);
     setShowTutorial(true);
+    setStatusMsg(null);
     setScreen('game');
   }
 
