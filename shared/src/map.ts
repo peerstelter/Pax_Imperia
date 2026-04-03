@@ -83,18 +83,22 @@ const NAMES: Record<Biome, string[]> = {
   default: [
     'Valdenmoor', 'Ironholt', 'Greyveil', 'Castreth', 'Dunwall',
     'Aldenmere', 'Thornfield', 'Ashford', 'Rindwick', 'Colspire',
+    'Wychford', 'Amberveil', 'Stonereach',
   ],
   steppe: [
     'Kharvask', 'Durathaan', 'Orhun Plain', 'Temurak', 'Veldt of Kos',
   ],
   desert: [
     'Al-Qassar', 'Dune Keep', 'Sahrabad', 'Sunken Oasis', 'Scorchfield',
+    'Mirabad', 'Sandveil', 'Ember Reach',
   ],
   isles: [
     'Dunmara', 'Stormhaven', 'Loch Anvar', 'Seacliff', 'Rockfall Isle',
+    'Tidemark', 'Greywash', 'Salthollow', 'Dawnport', 'Mistshore',
   ],
   tundra: [
     'Frostmere', 'Icelund', 'Borealis Hold', 'Snowgate', 'Glaciermark',
+    'Coldwatch',
   ],
 };
 
