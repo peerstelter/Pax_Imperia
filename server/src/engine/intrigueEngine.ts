@@ -4,6 +4,18 @@ import type { IntrigueActionType } from '@pax-imperia/shared';
 import { networkSuccessBonus } from './spyNetwork.js';
 import { adjustOpinion } from './opinionEngine.js';
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function factionName(db: Database.Database, gameId: string, factionId: string): string {
+  const row = db.prepare('SELECT name FROM factions WHERE game_id = ? AND id = ?').get(gameId, factionId) as { name: string } | undefined;
+  return row?.name ?? factionId;
+}
+
+function provinceName(db: Database.Database, gameId: string, provinceId: string): string {
+  const row = db.prepare('SELECT name FROM provinces WHERE game_id = ? AND id = ?').get(gameId, provinceId) as { name: string } | undefined;
+  return row?.name ?? provinceId;
+}
+
 // ── Base success chances per action type ──────────────────────────────────────
 
 export const BASE_SUCCESS_CHANCE: Record<IntrigueActionType, number> = {
@@ -116,32 +128,33 @@ function applyIntrigueSuccess(
   action: IntrigueRow,
   events: string[],
 ): void {
+  const srcName = factionName(db, gameId, action.source_faction_id);
+  const tgtName = factionName(db, gameId, action.target_faction_id);
+
   switch (action.type) {
     case 'spy':
-      // Reveal all provinces owned by target faction
       db.prepare(`UPDATE provinces SET is_revealed = 1 WHERE game_id = ? AND owner_id = ?`)
         .run(gameId, action.target_faction_id);
-      events.push(`Spy success: ${action.source_faction_id} revealed ${action.target_faction_id}'s provinces`);
+      events.push(`Spy success: ${srcName} revealed ${tgtName}'s provinces`);
       break;
 
     case 'propaganda':
       if (action.target_province_id) {
-        // Reduce garrison and mark province as unrest (halves next turn's garrison recovery)
         db.prepare(`UPDATE provinces SET garrison = MAX(0, garrison - 100) WHERE game_id = ? AND id = ?`)
           .run(gameId, action.target_province_id);
-        // Log unrest event so UI and turn engine can display/act on it
         {
+          const pName = provinceName(db, gameId, action.target_province_id);
           const game = db.prepare('SELECT turn FROM games WHERE id = ?').get(gameId) as { turn: number };
           db.prepare(
             `INSERT INTO turn_log (id, game_id, turn, type, description, faction_id, province_id, data)
              VALUES (?, ?, ?, 'province_unrest', ?, ?, ?, '{}')`,
           ).run(
             randomUUID(), gameId, game.turn,
-            `Propaganda caused unrest in ${action.target_province_id}`,
+            `Propaganda caused unrest in ${pName}`,
             action.source_faction_id, action.target_province_id,
           );
+          events.push(`Propaganda success: garrison -100 and unrest in ${pName}`);
         }
-        events.push(`Propaganda success: garrison -100 and unrest in ${action.target_province_id}`);
       }
       break;
 
@@ -149,58 +162,53 @@ function applyIntrigueSuccess(
       if (action.target_province_id) {
         db.prepare(`UPDATE provinces SET fort_level = MAX(0, fort_level - 1) WHERE game_id = ? AND id = ?`)
           .run(gameId, action.target_province_id);
-        events.push(`Sabotage success: fort level -1 in ${action.target_province_id}`);
+        events.push(`Sabotage success: fort level -1 in ${provinceName(db, gameId, action.target_province_id)}`);
       }
       break;
 
     case 'assassinate':
-      // Kill a random living commander of the target faction
       {
         const commander = db
-          .prepare(`SELECT id FROM commanders WHERE game_id = ? AND faction_id = ? AND is_alive = 1 ORDER BY RANDOM() LIMIT 1`)
-          .get(gameId, action.target_faction_id) as { id: string } | undefined;
+          .prepare(`SELECT id, name FROM commanders WHERE game_id = ? AND faction_id = ? AND is_alive = 1 ORDER BY RANDOM() LIMIT 1`)
+          .get(gameId, action.target_faction_id) as { id: string; name: string } | undefined;
         if (commander) {
           db.prepare('UPDATE commanders SET is_alive = 0 WHERE game_id = ? AND id = ?')
             .run(gameId, commander.id);
-          events.push(`Assassination success: commander ${commander.id} of ${action.target_faction_id} killed`);
+          events.push(`Assassination: ${commander.name} of ${tgtName} killed`);
         }
-        // Shadow influence gain
-        gainShadowInfluence(db, gameId, action.source_faction_id, action.target_faction_id, 15, events);
+        gainShadowInfluence(db, gameId, action.source_faction_id, action.target_faction_id, 15, events, srcName, tgtName);
       }
       break;
 
     case 'bribe':
-      // Turn a random enemy commander (they defect — removed from enemy army)
       {
         const commander = db
-          .prepare(`SELECT id FROM commanders WHERE game_id = ? AND faction_id = ? AND is_alive = 1 ORDER BY RANDOM() LIMIT 1`)
-          .get(gameId, action.target_faction_id) as { id: string } | undefined;
+          .prepare(`SELECT id, name FROM commanders WHERE game_id = ? AND faction_id = ? AND is_alive = 1 ORDER BY RANDOM() LIMIT 1`)
+          .get(gameId, action.target_faction_id) as { id: string; name: string } | undefined;
         if (commander) {
           db.prepare('UPDATE commanders SET faction_id = ? WHERE game_id = ? AND id = ?')
             .run(action.source_faction_id, gameId, commander.id);
-          events.push(`Bribe success: commander ${commander.id} defected to ${action.source_faction_id}`);
+          events.push(`Bribe: ${commander.name} defected to ${srcName}`);
         }
-        gainShadowInfluence(db, gameId, action.source_faction_id, action.target_faction_id, 10, events);
+        gainShadowInfluence(db, gameId, action.source_faction_id, action.target_faction_id, 10, events, srcName, tgtName);
       }
       break;
 
     case 'blackmail':
-      // Force a tribute payment: drain 100 gold from target to source
       {
-        const target = db
+        const targetRow = db
           .prepare('SELECT gold FROM factions WHERE game_id = ? AND id = ?')
           .get(gameId, action.target_faction_id) as { gold: number } | undefined;
-        const tribute = Math.min(100, target?.gold ?? 0);
+        const tribute = Math.min(100, targetRow?.gold ?? 0);
         if (tribute > 0) {
           db.prepare('UPDATE factions SET gold = gold - ? WHERE game_id = ? AND id = ?')
             .run(tribute, gameId, action.target_faction_id);
           db.prepare('UPDATE factions SET gold = gold + ? WHERE game_id = ? AND id = ?')
             .run(tribute, gameId, action.source_faction_id);
-          events.push(`Blackmail success: ${action.target_faction_id} paid ${tribute}g tribute to ${action.source_faction_id}`);
+          events.push(`Blackmail: ${tgtName} paid ${tribute}g tribute to ${srcName}`);
         }
-        // Lasting opinion penalty (target resents blackmailer)
         adjustOpinion(db, gameId, action.source_faction_id, action.target_faction_id, -20);
-        gainShadowInfluence(db, gameId, action.source_faction_id, action.target_faction_id, 10, events);
+        gainShadowInfluence(db, gameId, action.source_faction_id, action.target_faction_id, 10, events, srcName, tgtName);
       }
       break;
   }
@@ -213,10 +221,12 @@ function gainShadowInfluence(
   target: string,
   amount: number,
   events: string[],
+  srcName?: string,
+  tgtName?: string,
 ): void {
   db.prepare(
     `UPDATE shadow_influence SET influence = MIN(100, influence + ?)
      WHERE game_id = ? AND source_faction = ? AND target_faction = ?`,
   ).run(amount, gameId, source, target);
-  events.push(`${source} shadow influence +${amount} on ${target}`);
+  events.push(`${srcName ?? source} shadow influence +${amount} on ${tgtName ?? target}`);
 }
