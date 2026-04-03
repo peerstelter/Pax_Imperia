@@ -92,16 +92,20 @@ const RANDOM_EVENTS: RandomEvent[] = [
  */
 export function tickRandomEvents(db: Database.Database, gameId: string): string[] {
   const factions = db
-    .prepare('SELECT id FROM factions WHERE game_id = ?')
-    .all(gameId) as { id: string }[];
+    .prepare('SELECT id, name FROM factions WHERE game_id = ?')
+    .all(gameId) as { id: string; name: string }[];
 
   const game = db.prepare('SELECT turn FROM games WHERE id = ?').get(gameId) as { turn: number };
+  const factionNames = new Map(factions.map((f) => [f.id, f.name]));
   const events: string[] = [];
 
   for (const { id: factionId } of factions) {
     for (const evt of RANDOM_EVENTS) {
       if (Math.random() < evt.probability) {
-        const description = evt.apply(db, gameId, factionId, game.turn);
+        const rawDesc = evt.apply(db, gameId, factionId, game.turn);
+        // Replace faction ID with display name in event message
+        const factionName = factionNames.get(factionId) ?? factionId;
+        const description = rawDesc.replace(factionId, factionName);
         events.push(description);
 
         db.prepare(
