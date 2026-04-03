@@ -15,3 +15,11 @@ export const BIOME_STROKE: Record<Biome, string> = {
   isles:   '#2a5c6a',
   tundra:  '#5a7888',
 };
+
+export const BIOME_ICON: Record<Biome, string> = {
+  default: '🌿',
+  steppe:  '🌾',
+  desert:  '🏜️',
+  isles:   '⛵',
+  tundra:  '❄️',
+};

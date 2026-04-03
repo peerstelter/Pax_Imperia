@@ -134,15 +134,28 @@ export default function App() {
   return (
     <div className="flex flex-col min-h-screen bg-stone-900 text-stone-100">
       {/* HUD */}
-      <header className="flex items-center justify-between px-4 py-2 bg-stone-950 border-b border-stone-700 gap-4">
+      <header className="flex items-center justify-between px-4 py-2 gap-4" style={{ background: 'linear-gradient(90deg, #0c0a08 0%, #1a1208 50%, #0c0a08 100%)', borderBottom: '1px solid #78350f' }}>
         <h1 className="text-amber-400 font-bold tracking-widest text-lg">PAX IMPERIA</h1>
 
         {/* Resources */}
-        <div className="flex gap-4 text-xs text-stone-300">
-          <span>Turn <b className="text-amber-300">{gameState.turn}</b></span>
-          <span>Gold <b className="text-yellow-300">{playerFaction?.gold ?? '—'}</b></span>
-          <span>Food <b className="text-green-300">{playerFaction?.food ?? '—'}</b></span>
-          <span>Men <b className="text-blue-300">{playerFaction?.manpower ?? '—'}</b></span>
+        <div className="flex gap-3 text-xs">
+          <div className="flex items-center gap-1.5 bg-stone-800 border border-stone-700 rounded-lg px-3 py-1.5">
+            <span>⚔️</span>
+            <span className="text-stone-400">Turn</span>
+            <span className="text-amber-300 font-black">{gameState.turn}</span>
+          </div>
+          <div className="flex items-center gap-1.5 bg-stone-800 border border-stone-700 rounded-lg px-3 py-1.5">
+            <span>💰</span>
+            <span className="text-yellow-300 font-black">{playerFaction?.gold ?? '—'}</span>
+          </div>
+          <div className="flex items-center gap-1.5 bg-stone-800 border border-stone-700 rounded-lg px-3 py-1.5">
+            <span>🌾</span>
+            <span className="text-green-300 font-black">{playerFaction?.food ?? '—'}</span>
+          </div>
+          <div className="flex items-center gap-1.5 bg-stone-800 border border-stone-700 rounded-lg px-3 py-1.5">
+            <span>🗡️</span>
+            <span className="text-blue-300 font-black">{playerFaction?.manpower ?? '—'}</span>
+          </div>
         </div>
 
         {/* Actions */}

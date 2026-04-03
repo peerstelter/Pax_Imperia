@@ -1,4 +1,5 @@
 import type { Province, Faction, DiplomaticRelation } from '@pax-imperia/shared';
+import { BIOME_ICON } from './biomeColors.js';
 
 interface ProvinceInfoPanelProps {
   province: Province;
@@ -53,12 +54,12 @@ export default function ProvinceInfoPanel({
   const isPlayerOwned = playerFaction && faction?.id === playerFaction.id;
 
   return (
-    <aside className="w-72 bg-stone-800 border border-stone-600 rounded p-4 flex flex-col gap-3 text-sm overflow-y-auto max-h-full">
+    <aside className="w-72 rounded-xl p-4 flex flex-col gap-3 text-sm overflow-y-auto max-h-full" style={{ background: 'linear-gradient(160deg, #1e1a14 0%, #12100d 100%)', border: '1px solid #78350f' }}>
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
           <h2 className="text-amber-400 font-bold text-base">{province.name}</h2>
-          <p className="text-stone-400 text-xs">{BIOME_LABEL[province.biome]} · {province.id}</p>
+          <p className="text-stone-400 text-xs">{BIOME_ICON[province.biome]} {BIOME_LABEL[province.biome]}</p>
         </div>
         <button
           onClick={onClose}
@@ -69,7 +70,7 @@ export default function ProvinceInfoPanel({
         </button>
       </div>
 
-      <hr className="border-stone-600" />
+      <hr className="border-stone-700/50" />
 
       {/* Owner */}
       <div className="flex items-center gap-2">
@@ -86,22 +87,22 @@ export default function ProvinceInfoPanel({
 
       {/* Garrison & fortification */}
       <div className="grid grid-cols-2 gap-2 text-xs">
-        <div className="bg-stone-700 rounded p-2">
-          <div className="text-stone-500 mb-0.5">Garrison</div>
+        <div className="rounded-lg p-2 bg-stone-800 border border-stone-700/50">
+          <div className="text-stone-500 mb-0.5 text-xs uppercase tracking-wide">Garrison</div>
           <div className="text-stone-100 font-semibold">{province.garrison.toLocaleString()} troops</div>
         </div>
-        <div className="bg-stone-700 rounded p-2">
-          <div className="text-stone-500 mb-0.5">Fort Level</div>
+        <div className="rounded-lg p-2 bg-stone-800 border border-stone-700/50">
+          <div className="text-stone-500 mb-0.5 text-xs uppercase tracking-wide">Fort Level</div>
           <div className="text-stone-100 font-semibold">
             {province.fortLevel === 0 ? 'None' : `Level ${province.fortLevel}`}
           </div>
         </div>
-        <div className="bg-stone-700 rounded p-2">
-          <div className="text-stone-500 mb-0.5">Strategic Value</div>
+        <div className="rounded-lg p-2 bg-stone-800 border border-stone-700/50">
+          <div className="text-stone-500 mb-0.5 text-xs uppercase tracking-wide">Strategic Value</div>
           <div className="text-amber-300 font-semibold">{'★'.repeat(province.strategicValue)}{'☆'.repeat(3 - province.strategicValue)}</div>
         </div>
-        <div className="bg-stone-700 rounded p-2">
-          <div className="text-stone-500 mb-0.5">Visibility</div>
+        <div className="rounded-lg p-2 bg-stone-800 border border-stone-700/50">
+          <div className="text-stone-500 mb-0.5 text-xs uppercase tracking-wide">Visibility</div>
           <div className={province.isRevealed ? 'text-green-400' : 'text-red-400'}>
             {province.isRevealed ? 'Revealed' : 'Hidden'}
           </div>
@@ -110,7 +111,7 @@ export default function ProvinceInfoPanel({
 
       {/* Economy */}
       <div>
-        <p className="text-stone-500 text-xs mb-1 uppercase tracking-wide">Economy</p>
+        <p className="text-stone-500 text-xs mb-1 uppercase tracking-wide">💰 Economy</p>
         <p className="text-stone-300 text-xs">{BIOME_ECONOMY[province.biome]}</p>
         {isPlayerOwned && (
           <p className="text-green-400 text-xs mt-1">Your province — collecting resources each turn</p>
@@ -120,9 +121,9 @@ export default function ProvinceInfoPanel({
       {/* Diplomatic status */}
       {dipRelation && (
         <>
-          <hr className="border-stone-600" />
+          <hr className="border-stone-700/50" />
           <div>
-            <p className="text-stone-500 text-xs mb-1 uppercase tracking-wide">Relations</p>
+            <p className="text-stone-500 text-xs mb-1 uppercase tracking-wide">🤝 Relations</p>
             <div className="flex items-center gap-2 text-xs mb-1">
               <span className="text-stone-400">Opinion:</span>
               <span className={
@@ -151,9 +152,9 @@ export default function ProvinceInfoPanel({
       {/* Adjacent */}
       {province.adjacentIds.length > 0 && (
         <>
-          <hr className="border-stone-600" />
+          <hr className="border-stone-700/50" />
           <div>
-            <p className="text-stone-500 text-xs mb-1 uppercase tracking-wide">Adjacent</p>
+            <p className="text-stone-500 text-xs mb-1 uppercase tracking-wide">🗺️ Adjacent</p>
             <div className="flex flex-wrap gap-1">
               {province.adjacentIds.map((adjId) => (
                 <span key={adjId} className="px-1.5 py-0.5 bg-stone-700 rounded text-xs text-stone-400">
