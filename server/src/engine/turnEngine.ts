@@ -130,10 +130,12 @@ function checkVictory(db: Database.Database, gameId: string): VictoryResult | nu
   ).c;
   const warThreshold = Math.ceil(totalProvinces * 0.6);
 
-  // War victory
+  // War victory — exclude the neutral faction (it's a placeholder for unclaimed territory)
   const warRows = db
     .prepare(
-      `SELECT owner_id, COUNT(*) as cnt FROM provinces WHERE game_id = ? GROUP BY owner_id HAVING cnt >= ?`,
+      `SELECT owner_id, COUNT(*) as cnt FROM provinces
+       WHERE game_id = ? AND owner_id != 'f_neutral'
+       GROUP BY owner_id HAVING cnt >= ?`,
     )
     .all(gameId, warThreshold) as { owner_id: string; cnt: number }[];
 
@@ -141,11 +143,11 @@ function checkVictory(db: Database.Database, gameId: string): VictoryResult | nu
     return { factionId: warRows[0].owner_id, path: 'war' };
   }
 
-  // Intrigue victory — faction with 75%+ shadow influence over 4+ other factions
+  // Intrigue victory — faction with 75%+ shadow influence over 4+ other factions (not neutral)
   const shadowRows = db
     .prepare(
       `SELECT source_faction, COUNT(*) as puppets
-       FROM shadow_influence WHERE game_id = ? AND influence >= ?
+       FROM shadow_influence WHERE game_id = ? AND influence >= ? AND source_faction != 'f_neutral'
        GROUP BY source_faction HAVING puppets >= 4`,
     )
     .all(gameId, INTRIGUE_PUPPET_THRESHOLD) as { source_faction: string; puppets: number }[];

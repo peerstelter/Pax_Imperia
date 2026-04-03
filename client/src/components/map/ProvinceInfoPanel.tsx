@@ -5,6 +5,7 @@ interface ProvinceInfoPanelProps {
   faction: Faction | undefined;
   playerFaction?: Faction;
   relations?: DiplomaticRelation[];
+  allProvinces?: Province[];
   onClose: () => void;
 }
 
@@ -37,8 +38,10 @@ export default function ProvinceInfoPanel({
   faction,
   playerFaction,
   relations = [],
+  allProvinces = [],
   onClose,
 }: ProvinceInfoPanelProps) {
+  const provinceNameMap = new Map(allProvinces.map((p) => [p.id, p.name]));
   // Diplomatic status between player and province owner
   const dipRelation = playerFaction && faction && faction.id !== playerFaction.id
     ? (() => {
@@ -154,7 +157,7 @@ export default function ProvinceInfoPanel({
             <div className="flex flex-wrap gap-1">
               {province.adjacentIds.map((adjId) => (
                 <span key={adjId} className="px-1.5 py-0.5 bg-stone-700 rounded text-xs text-stone-400">
-                  {adjId}
+                  {provinceNameMap.get(adjId) ?? adjId}
                 </span>
               ))}
             </div>

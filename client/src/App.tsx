@@ -197,6 +197,7 @@ export default function App() {
                 faction={selectedFaction}
                 playerFaction={playerFaction}
                 relations={gameState.diplomaticRelations}
+                allProvinces={gameState.provinces}
                 onClose={() => setSelectedId(null)}
               />
             </div>
@@ -210,6 +211,7 @@ export default function App() {
                 faction={selectedFaction}
                 playerFaction={playerFaction}
                 relations={gameState.diplomaticRelations}
+                allProvinces={gameState.provinces}
                 onClose={() => setSelectedId(null)}
               />
             </div>
