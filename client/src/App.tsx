@@ -6,6 +6,7 @@ import Minimap from './components/map/Minimap.js';
 import DiplomacyMenu from './components/diplomacy/DiplomacyMenu.js';
 import MenuPage from './pages/MenuPage.js';
 import TutorialGuide from './components/tutorial/TutorialGuide.js';
+import RankingBoard from './components/RankingBoard.js';
 
 // ── App state ─────────────────────────────────────────────────────────────────
 
@@ -22,6 +23,7 @@ export default function App() {
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showRanking, setShowRanking] = useState(false);
 
   // ── Load game state ──────────────────────────────────────────────────────────
 
@@ -146,6 +148,12 @@ export default function App() {
         {/* Actions */}
         <div className="flex gap-2">
           <button
+            onClick={() => setShowRanking(true)}
+            className="px-3 py-1 text-xs bg-stone-800 hover:bg-stone-700 border border-stone-600 rounded"
+          >
+            Rankings
+          </button>
+          <button
             onClick={() => setShowDiplomacy(true)}
             className="px-3 py-1 text-xs bg-stone-800 hover:bg-stone-700 border border-stone-600 rounded"
           >
@@ -234,6 +242,16 @@ export default function App() {
           onOffer={handleDiplomacyOffer}
           onGift={handleGift}
           onMission={handleMission}
+        />
+      )}
+
+      {/* Rankings */}
+      {showRanking && (
+        <RankingBoard
+          factions={gameState.factions}
+          provinces={gameState.provinces}
+          playerFactionId={playerFactionId ?? ''}
+          onClose={() => setShowRanking(false)}
         />
       )}
 
