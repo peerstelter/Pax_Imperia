@@ -13,7 +13,7 @@ export const OPINION_MODS = {
   giftDiminishing:   -2,   // stacked per prior gift this turn
   tradeActive:        3,   // per turn while trade treaty active
   allianceActive:     2,   // per turn while allied
-  warDeclaration:   -30,
+  warDeclaration:   -70,
   aggressiveExpansion: -10,  // to all neighbours when you conquer
   treatyBroken:     -25,
   warAid:            15,   // helped ally in their war

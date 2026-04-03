@@ -64,7 +64,7 @@ export function tickAiCombat(db: Database.Database, gameId: string, turn: number
           const defGarrison = target.garrison;
 
           // Attacker needs 20% advantage to attempt assault
-          if (atkGarrison < defGarrison * 1.2) break;
+          if (atkGarrison < defGarrison * 1.2) continue;
 
           // Roll for success (60-80% chance when attacker has advantage)
           const successChance = Math.min(0.8, 0.5 + (atkGarrison - defGarrison) / (defGarrison + 1) * 0.3);

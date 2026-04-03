@@ -33,8 +33,8 @@ export function declareWar(
     JSON.stringify({ defenderId, casusBelli }),
   );
 
-  // Opinion penalty on both sides with all neighbours (-10 for aggression)
-  applyOpinionPenalty(db, gameId, attackerId, -30, defenderId);
+  // Opinion penalty: war declaration tanks direct relation, all others get expansion malus
+  applyOpinionPenalty(db, gameId, attackerId, -70, defenderId);
   applyOpinionPenalty(db, gameId, attackerId, -10);  // all others: aggressive expansion malus
 
   // Call-to-arms: allies of the defender join the war

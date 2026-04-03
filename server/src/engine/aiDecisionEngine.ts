@@ -106,8 +106,8 @@ function runFactionAI(
 
     switch (self.personality) {
       case 'aggressive':
-        // Declare war if much stronger and no NAP
-        if (myStrength > otherStrength * 1.5 && !treaties.includes('non_aggression') && !treaties.includes('alliance') && roll < 0.15) {
+        // Declare war if stronger and no NAP
+        if (myStrength >= otherStrength * 1.0 && !treaties.includes('non_aggression') && !treaties.includes('alliance') && roll < 0.20) {
           declareWar(db, gameId, self.id, other.id, 'expansion');
         }
         // Occasionally ally with the strongest neighbour
@@ -125,7 +125,7 @@ function runFactionAI(
 
       case 'expansionist':
         // Lower bar for war declaration
-        if (myStrength > otherStrength * 1.2 && !treaties.includes('non_aggression') && !treaties.includes('alliance') && roll < 0.18) {
+        if (myStrength >= otherStrength * 0.9 && !treaties.includes('non_aggression') && !treaties.includes('alliance') && roll < 0.22) {
           declareWar(db, gameId, self.id, other.id, 'expansion');
         }
         // Also seeks alliances to flank enemies
