@@ -12,6 +12,7 @@ import { tickRandomEvents } from './eventSystem.js';
 import { tickNetworkDecay } from './spyNetwork.js';
 import { resolveAction } from './intrigueEngine.js';
 import { INTRIGUE_PUPPET_THRESHOLD } from '@pax-imperia/shared';
+import { tickAiCombat } from './aiCombat.js';
 
 interface GameRow { id: string; turn: number; player_faction: string; winner: string | null }
 interface IntrigueRow {
@@ -50,6 +51,9 @@ export function advanceTurn(db: Database.Database, gameId: string): {
   db.transaction(() => {
     // 0. AI decisions (before resource tick so they act on current state)
     runAiDecisions(db, gameId);
+
+    // 0b. AI combat — resolve border assaults for factions at war
+    tickAiCombat(db, gameId, game.turn, events);
 
     // 1. Resolve pending intrigue actions
     resolveIntrigueActions(db, gameId, game.turn, events);
